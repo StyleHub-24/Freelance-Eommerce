@@ -24,7 +24,7 @@ const ProductReviews = ({ productId }) => {
       const result = await response.json();
 
       if (result.success) {
-        toast.success("Review submitted sucessfully!")
+        toast.success("Review submited sucessfully!")
         setNewReview('');
         setRating(5);
         fetchReviews(); // Refetch reviews after submitting a new one

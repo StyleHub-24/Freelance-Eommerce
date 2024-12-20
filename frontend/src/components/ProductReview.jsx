@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Star } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 const ProductReviews = ({ productId }) => {
   const [newReview, setNewReview] = useState('');
@@ -23,16 +24,18 @@ const ProductReviews = ({ productId }) => {
       const result = await response.json();
 
       if (result.success) {
-        alert('Review submitted successfully!');
+        toast.success("Review submitted sucessfully!")
         setNewReview('');
         setRating(5);
         fetchReviews(); // Refetch reviews after submitting a new one
       } else {
-        alert('Failed to submit review: ' + result.message);
+        toast.error("Enter something in the comment...");
+        console.log(result.message)
       }
     } catch (error) {
       console.error('Error submitting review:', error);
-      alert('An error occurred while submitting the review.');
+      // alert('An error occurred while submitting the review.');
+      toast.error('An error occurred while submitting the review.')
     }
   };
 

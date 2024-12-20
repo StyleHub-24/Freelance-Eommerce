@@ -44,6 +44,19 @@ const Orders = ({token}) => {
     }
   }
 
+  const handleRefundChange = async (orderId, refunded) => {
+    try {
+      const response = await axios.post(backendUrl + '/api/order/updateRefund', { orderId, refunded }, { headers: { token } });
+      if (response.data.success) {
+        toast.success(response.data.message);
+        await fetchAllOrders();
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error(error.message);
+    }
+  };
+
   useEffect(() => {
     fetchAllOrders();
   }, [token])
@@ -81,7 +94,7 @@ const Orders = ({token}) => {
                 <p>Date: {new Date(order.date).toLocaleDateString()}</p>
             </div>
             <p className='text-sm sm:text-[15px]'>{currency}{order.amount}</p>
-            <select onChange={(event) => statusHandler(event, order._id)} value={order.status} className='p-2 font-semibold'>
+            <select onChange={(event) => statusHandler(event, order._id)} value={order.status} className='p-2 font-semibold' disabled={order.status === 'Canceled'}>
               <option value="Order Placed">Order Placed</option>
               <option value="Packing">Packing</option>
               <option value="Shipped">Shipped</option>
@@ -89,6 +102,20 @@ const Orders = ({token}) => {
               <option value="Delivered">Delivered</option>
               <option value="Canceled">Canceled</option>
             </select>
+
+            {order.status === 'Canceled' && order.paymentMethod !== 'COD' && (
+              <div className="flex items-center mt-3">
+                <input
+                  type="checkbox"
+                  checked={order.refunded}
+                  onChange={() => handleRefundChange(order._id, !order.refunded)}
+                  id={`refund-${order._id}`}
+                  className="mr-2"
+                />
+                <label htmlFor={`refund-${order._id}`} className="text-sm">Refunded</label>
+              </div>
+            )}
+
           </div>
           ))
         }

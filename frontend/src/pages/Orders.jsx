@@ -31,6 +31,7 @@ const Orders = () => {
             item["paymentMethod"] = order.paymentMethod;
             item["date"] = order.date;
             item["orderId"] = order._id;
+            item["refunded"] = order.refunded;
             allOrdersItem.push(item);
           });
         });
@@ -97,6 +98,9 @@ const Orders = () => {
                   Payment:{" "}
                   <span className="text-gray-400">{item.paymentMethod}</span>
                 </p>
+                {item.refunded && item.paymentMethod !== "COD" && (
+                  <p className="text-sm text-green-500 mt-2">Amount refunded</p>
+                )}
               </div>
             </div>
             <div className="md:w-1/2 flex justify-between">

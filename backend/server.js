@@ -7,12 +7,15 @@ import userRouter from "./routes/userRoute.js";
 import productRouter from "./routes/productRoute.js";
 import cartRouter from "./routes/cartRoute.js";
 import orderRouter from "./routes/orderRoute.js";
+import migrateRefundField from "./config/migrateRefundField.js";
 
 // App config
 const app = express();
 const port = process.env.PORT || 4000;
 connectDB();
 connectCloudinary();
+// To add new field in existing documents
+// migrateRefundField();
 
 // Middlewares
 app.use(express.json())

@@ -235,6 +235,7 @@ const updateStatus = async (req, res) => {
     }
 }
 
+// to cancel the order
 const cancelOrder = async (req, res) => {
     try {
       const { userId, orderId } = req.body;
@@ -242,7 +243,7 @@ const cancelOrder = async (req, res) => {
   
       // Find the order by ID and ensure it belongs to the user
       const order = await orderModel.findOne({ _id: orderId, userId });
-      console.log("Order Found:", order);
+    //   console.log("Order Found:", order);
   
       if (!order) {
         return res.json({ success: false, message: "Order not found!" });
@@ -258,7 +259,7 @@ const cancelOrder = async (req, res) => {
       // Cancel the order
       await orderModel.findByIdAndUpdate(orderId, {
         status: "Canceled",
-        payment: false,
+        // payment: false,
       });
   
       res.json({ success: true, message: "Order canceled successfully!" });
@@ -266,8 +267,40 @@ const cancelOrder = async (req, res) => {
       console.error("Order Cancel Error:", error);
       res.json({ success: false, message: error.message });
     }
-  };
+};
+
+// Update refund status from Admin panel
+const updateRefundStatus = async (req, res) => {
+    try {
+        const { orderId, refunded } = req.body;
+
+        // Check if the order exists
+        const order = await orderModel.findById(orderId);
+        if (!order) {
+            return res.json({ success: false, message: "Order not found!" });
+        }
+
+        // Allow refund updates only if the order is canceled
+        if (order.status !== "Canceled") {
+            return res.json({
+                success: false,
+                message: "Refund can only be updated for canceled orders!",
+            });
+        }
+
+        // Update refunded status
+        await orderModel.findByIdAndUpdate(orderId, {
+            refunded,
+            payment: false,
+        });
+        res.json({ success: true, message: "Amount refunded successfully!" });
+    } catch (error) {
+        console.error("Refund Update Error:", error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
   
   
 
-export { placeOrder, placeOrderStripe, placeOrderRazorpay, allOrders, userOrders, updateStatus, verifyStripe, verifyRazorpay, cancelOrder }
+export { placeOrder, placeOrderStripe, placeOrderRazorpay, allOrders, userOrders, updateStatus, verifyStripe, verifyRazorpay, cancelOrder, updateRefundStatus }

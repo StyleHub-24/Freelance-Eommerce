@@ -3,6 +3,8 @@ import { useParams } from 'react-router-dom'
 import { ShopContext } from '../context/ShopContext';
 import { assets } from '../assets/assets';
 import RelatedProducts from '../components/RelatedProducts';
+import ProductReviews from '../components/ProductReview';
+import ProductDescription from '../components/ProductDescription';
 
 const Product = () => {
 
@@ -12,6 +14,7 @@ const Product = () => {
   const [productData, setProductData] = useState(false);
   const [image, setImage] = useState('');
   const [size, setSize] = useState('');
+  const [activeTab, setActiveTab] = useState('description'); // Active tab state
 
   const fetchPeoductData = async () => {
 
@@ -79,16 +82,28 @@ const Product = () => {
             </div>
         </div>
       </div>
-      {/* Description & reviews section */}
-      <div className='mt-20'>
-        <div className='flex'>
-            <b className='border px-5 py-3 text-sm'>Description</b>
-            <p className='border px-5 py-3 text-sm'>Reviews (122)</p>
+     {/* Description & Reviews Section */}
+     <div className="mt-20">
+        <div className="flex">
+          <button
+            onClick={() => setActiveTab('description')}
+            className={`px-5 py-3 text-sm ${
+              activeTab === 'description' ? 'border-b-2 border-orange-500 font-bold' : 'border'
+            }`}
+          >
+            Description
+          </button>
+          <button
+            onClick={() => setActiveTab('review')}
+            className={`px-5 py-3 text-sm ${
+              activeTab === 'review' ? 'border-b-2 border-orange-500 font-bold' : 'border'
+            }`}
+          >
+            Reviews
+          </button>
         </div>
-        <div className='flex flex-col gap-4 border px-6 py-6 text-sm text-gray-500'>
-            <p>An ecommerce website is a website that sells products or services online. It is a type of website that allows customers to buy products or services directly from the website.</p>
-            <p>Ecommerce website is a website that sells products or services online. It is a type of website that allows customers to buy products or services directly from the website.</p>
-        </div>
+        {activeTab === 'description' && <ProductDescription />}
+        {activeTab === 'review' && <ProductReviews productId={productId}/>}
       </div>
       {/* display related products */}
       <RelatedProducts category={productData.category} subCategory={productData.subCategory} />

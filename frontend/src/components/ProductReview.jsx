@@ -1,19 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { Star } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { useContext } from 'react';
+import { ShopContext } from '../context/ShopContext';
 
 const ProductReviews = ({ productId }) => {
   const [newReview, setNewReview] = useState('');
   const [rating, setRating] = useState(5);
   const [reviews, setReviews] = useState([]);
+  const {token, backendUrl} = useContext(ShopContext)
 
   const handleSubmitReview = async (e) => {
     e.preventDefault();
 
     try {
-      const response = await fetch('http://localhost:4000/api/review/add', {
+      const response = await fetch(backendUrl + '/api/review/add', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+           token
+        },
         body: JSON.stringify({
           productId,
           rating,
@@ -29,8 +35,8 @@ const ProductReviews = ({ productId }) => {
         setRating(5);
         fetchReviews(); // Refetch reviews after submitting a new one
       } else {
-        toast.error("Enter something in the comment...");
-        console.log(result.message)
+        toast.error(result.message);
+        // console.log(result.message)
       }
     } catch (error) {
       console.error('Error submitting review:', error);
@@ -41,9 +47,9 @@ const ProductReviews = ({ productId }) => {
 
   const fetchReviews = async () => {
     try {
-      const response = await fetch(`http://localhost:4000/api/review/${productId}`);
+      const response = await fetch(`${backendUrl}/api/review/${productId}`);
       const result = await response.json();
-      console.log(reviews)
+      // console.log(reviews)
 
       if (result.success) {
         setReviews(result.reviews);

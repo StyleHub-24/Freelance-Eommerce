@@ -116,7 +116,7 @@ const Orders = () => {
               {/* <button onClick={() => cancelOrder(item.orderId)} className='border px-4 py-2 text-sm text-red-500 font-medium rounded-sm'>Cancel</button>
                 <button onClick={loadOrderData} className='border px-4 py-2 text-sm font-medium rounded-sm'>Track Order</button> */}
               {/* Conditionally render buttons */}
-              {item.status !== "Canceled" && (
+              {/* {item.status !== "Canceled" && (
                 // <div className="flex gap-4">
                 <>
                   <button
@@ -133,6 +133,29 @@ const Orders = () => {
                   </button>
                 </>
                 // </div>
+              )} */}
+              {item.status === "Delivered" ? (
+                <button
+                  onClick={() => console.log("Review button clicked")}
+                  className="border px-4 py-2 text-sm font-medium rounded-sm"
+                >
+                  Review
+                </button>
+              ) : item.status !== "Canceled" && (
+                <>
+                  <button
+                    onClick={() => cancelOrder(item.orderId)}
+                    className="border px-4 py-2 text-sm text-red-500 font-medium rounded-sm"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={loadOrderData}
+                    className="border px-4 py-2 text-sm font-medium rounded-sm"
+                  >
+                    Track Order
+                  </button>
+                </>
               )}
             </div>
           </div>

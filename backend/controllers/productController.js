@@ -1,4 +1,4 @@
-import {v2 as cloudinary} from 'cloudinary';
+import { v2 as cloudinary } from 'cloudinary';
 import productModel from '../models/productModel.js';
 
 // function for add product
@@ -16,7 +16,7 @@ const addProduct = async (req, res) => {
 
         let imagesUrl = await Promise.all(
             images.map(async (item) => {
-                let result = await cloudinary.uploader.upload(item.path, {resource_type: "image"});
+                let result = await cloudinary.uploader.upload(item.path, { resource_type: "image" });
                 return result.secure_url;
             })
         )
@@ -44,7 +44,7 @@ const addProduct = async (req, res) => {
         const product = new productModel(productData);
         await product.save();
 
-        res.json({success: true, message: "Product added successfully!"})
+        res.json({ success: true, message: "Product added successfully!" })
 
     } catch (error) {
         console.log(error);
@@ -55,9 +55,9 @@ const addProduct = async (req, res) => {
 // function for list products
 const listProducts = async (req, res) => {
     try {
-        
+
         const products = await productModel.find({});
-        res.json({success: true, products})
+        res.json({ success: true, products })
 
     } catch (error) {
         console.log(error);
@@ -68,14 +68,14 @@ const listProducts = async (req, res) => {
 // function for removing product
 const removeProduct = async (req, res) => {
     try {
-        const id=req.body.id;
-        const product=await productModel.findById(id);
-        if(!product){
-            return res.json({success:false,message:"Product not found!"})
+        const id = req.body.id;
+        const product = await productModel.findById(id);
+        if (!product) {
+            return res.json({ success: false, message: "Product not found!" })
         }
-        const publicIds=product.image.map((url)=>{
-            const parts=url.split('/');
-            const lastPart=parts[parts.length-1];
+        const publicIds = product.image.map((url) => {
+            const parts = url.split('/');
+            const lastPart = parts[parts.length - 1];
             return lastPart.split('.')[0];
         })
         await Promise.all(
@@ -84,7 +84,7 @@ const removeProduct = async (req, res) => {
             })
         );
         await productModel.findByIdAndDelete(id);
-        res.json({success: true, message: "Product removed successfully!"})
+        res.json({ success: true, message: "Product removed successfully!" })
 
     } catch (error) {
         console.log(error);
@@ -95,10 +95,10 @@ const removeProduct = async (req, res) => {
 // function for single product info
 const singleProduct = async (req, res) => {
     try {
-        
-        const {productId} = req.body
+
+        const { productId } = req.body
         const product = await productModel.findById(productId)
-        res.json({success: true, product})
+        res.json({ success: true, product })
 
 
     } catch (error) {

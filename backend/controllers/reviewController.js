@@ -6,10 +6,9 @@ const addReview = async (req, res) => {
     try {
         const { rating, content, userId , productId } = req.body;
 
-        // Find the user by email from the request
-        const user = await userModel.findOne({ userId });
-        console.log(user.name);
-        
+        // Find the user by id from the request
+        const user = await userModel.findById(userId);
+        // console.log(user.name);
         
         // Check if user exists
         if (!user) {
@@ -25,7 +24,7 @@ const addReview = async (req, res) => {
             content,
             date: Date.now()
         };
-        console.log(reviewData.productId)
+        // console.log(reviewData.productId)
         const review = new reviewModel(reviewData);
         await review.save();
 

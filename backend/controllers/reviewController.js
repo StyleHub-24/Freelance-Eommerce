@@ -47,4 +47,39 @@ const listReviews = async (req, res) => {
     }
 };
 
-export { addReview, listReviews };
+// Function to delete a review
+const deleteReview = async (req, res) => {
+    // console.log("Authenticated user:", req.user); // Log the user object
+
+    const reviewId = req.params.id; // Review ID from the URL
+    const userId = req.user.id; // Get the user ID from the authenticated user
+
+    if (!userId) {
+        return res.status(400).json({ success: false, message: 'User ID is missing.' });
+    }
+
+    // console.log("uid: " + userId); // Logs the actual user ID
+
+    try {
+        const review = await reviewModel.findById(reviewId);
+
+        if (!review) {
+            return res.status(404).json({ success: false, message: 'Review not found' });
+        }
+
+        // Check if the logged-in user owns the review
+        // if (review.userId.toString() !== userId) {
+        //     return res.status(403).json({ success: false, message: 'You are not authorized to delete this review.' });
+        // }
+
+        // Delete the review
+        await review.deleteOne(); // Or review.remove()
+
+        res.status(200).json({ success: true, message: 'Review deleted successfully.' });
+    } catch (error) {
+        console.error("Error during review deletion:", error);
+        res.status(500).json({ success: false, message: 'Server error while deleting review.' });
+    }
+};
+
+export { addReview, listReviews, deleteReview };

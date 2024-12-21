@@ -3,6 +3,7 @@ import { Star } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useContext } from 'react';
 import { ShopContext } from '../context/ShopContext';
+import { useNavigate } from 'react-router-dom';
 
 const ProductReviews = ({ productId }) => {
   const [newReview, setNewReview] = useState('');
@@ -21,9 +22,19 @@ const ProductReviews = ({ productId }) => {
   // Check if the token is valid and user is authenticated also one thing that the user is not logged in they can view the reviews but they can't add or delete the reviews
   const isLoggedIn = token ? true : false;
   const decoded = isLoggedIn ? decodeToken(token).id : null;
+  console.log(decoded)
+  const navigate = useNavigate(); // Hook must be called at the top level of the component
 
   const handleSubmitReview = async (e) => {
     e.preventDefault();
+    if(decoded === null){
+      toast.warning("Please login first!")
+      navigate('/login'); // Redirect to the login page
+      setTimeout(() => {
+        window.scrollTo(0, 0); // Scroll to the top after navigating
+      }, 0);
+      return;
+    }
 
     try {
       const response = await fetch(backendUrl + '/api/review/add', {

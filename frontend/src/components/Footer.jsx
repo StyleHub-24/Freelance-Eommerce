@@ -45,6 +45,10 @@ const Footer = () => {
             <hr/>
             <p className='py-5 text-sm text-center'>Copyright &copy; 2024 StyleHub.com - All Rights Reserved.</p>
         </div>
+        <div>
+            <hr/>
+            <p  className='hidden py-5 text-sm text-center'>Developed By Arup Maity & Sk Mahammad Afzal</p>
+        </div>
     </div>
   )
 }

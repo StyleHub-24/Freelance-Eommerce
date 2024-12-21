@@ -4,11 +4,15 @@ import { ShopContext } from "../context/ShopContext";
 import Title from "../components/Title";
 import axios from "axios";
 import { toast } from "react-toastify";
+import ReviewForm from "../components/ReviewForm";
 
 const Orders = () => {
   const { backendUrl, token, currency } = useContext(ShopContext);
 
   const [orderData, setOrderData] = useState([]);
+
+  const [isReviewOpen, setIsReviewOpen] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState(null);
 
   const loadOrderData = async () => {
     try {
@@ -65,6 +69,16 @@ const Orders = () => {
     loadOrderData();
   }, [token]);
 
+  const openReviewPopup = (productId) => {
+    setSelectedProductId(productId);
+    setIsReviewOpen(true);
+  };
+
+  const closeReviewPopup = () => {
+    setSelectedProductId(null);
+    setIsReviewOpen(false);
+  };
+
   return (
     <div className="border-t pt-16">
       <div className="text-2xl">
@@ -105,7 +119,6 @@ const Orders = () => {
             </div>
             <div className="md:w-1/2 flex justify-between">
               <div className="flex items-center gap-2">
-                {/* <p className='min-w-2 h-2 rounded-full bg-green-500'></p> */}
                 <p
                   className={`min-w-2 h-2 rounded-full ${
                     item.status === "Canceled" ? "bg-red-500" : "bg-green-500"
@@ -113,54 +126,38 @@ const Orders = () => {
                 ></p>
                 <p className="text-sm md:text-base">{item.status}</p>
               </div>
-              {/* <button onClick={() => cancelOrder(item.orderId)} className='border px-4 py-2 text-sm text-red-500 font-medium rounded-sm'>Cancel</button>
-                <button onClick={loadOrderData} className='border px-4 py-2 text-sm font-medium rounded-sm'>Track Order</button> */}
-              {/* Conditionally render buttons */}
-              {/* {item.status !== "Canceled" && (
-                // <div className="flex gap-4">
-                <>
-                  <button
-                    onClick={() => cancelOrder(item.orderId)}
-                    className="border px-4 py-2 text-sm text-red-500 font-medium rounded-sm"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={loadOrderData}
-                    className="border px-4 py-2 text-sm font-medium rounded-sm"
-                  >
-                    Track Order
-                  </button>
-                </>
-                // </div>
-              )} */}
               {item.status === "Delivered" ? (
                 <button
-                  onClick={() => console.log("Review button clicked")}
-                  className="border px-4 py-2 text-sm font-medium rounded-sm"
+                  onClick={() => openReviewPopup(item._id)}
+                  className="border px-4 py-2 text-sm text-blue-500 font-medium rounded-sm"
                 >
                   Review
                 </button>
-              ) : item.status !== "Canceled" && (
-                <>
-                  <button
-                    onClick={() => cancelOrder(item.orderId)}
-                    className="border px-4 py-2 text-sm text-red-500 font-medium rounded-sm"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={loadOrderData}
-                    className="border px-4 py-2 text-sm font-medium rounded-sm"
-                  >
-                    Track Order
-                  </button>
-                </>
+              ) : (
+                item.status !== "Canceled" && (
+                  <>
+                    <button
+                      onClick={() => cancelOrder(item.orderId)}
+                      className="border px-4 py-2 text-sm text-red-500 font-medium rounded-sm"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={loadOrderData}
+                      className="border px-4 py-2 text-sm font-medium rounded-sm"
+                    >
+                      Track Order
+                    </button>
+                  </>
+                )
               )}
             </div>
           </div>
         ))}
       </div>
+      {isReviewOpen && (
+        <ReviewForm productId={selectedProductId} onClose={closeReviewPopup} />
+      )}
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import Home from './pages/Home'
 import Collection from './pages/Collection'
@@ -15,7 +15,12 @@ import SearchBar from './components/SearchBar'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Verify from './pages/Verify'
+import ResetPassword from './pages/ResetPassword'
+import { ShopContext } from './context/ShopContext'
 const App = () => {
+
+  const {backendUrl} = useContext(ShopContext)
+
   return (
     <div className='px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]'>
       <ToastContainer/>
@@ -33,6 +38,7 @@ const App = () => {
         <Route path='/place-order' element={<PlaceOrder />} />
         <Route path='/orders' element={<Orders />} />
         <Route path='/verify' element={<Verify />} />
+        <Route path="/reset-password/:token" element={<ResetPassword backendUrl={backendUrl} />} />
       </Routes>
       <Footer/>
     </div>

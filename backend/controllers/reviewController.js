@@ -52,7 +52,7 @@ const deleteReview = async (req, res) => {
     // console.log("Authenticated user:", req.user); // Log the user object
 
     const reviewId = req.params.id; // Review ID from the URL
-    const userId = req.user.id; // Get the user ID from the authenticated user
+    const { userId } = req.body; // Get the user ID from the authenticated user
 
     if (!userId) {
         return res.status(400).json({ success: false, message: 'User ID is missing.' });
@@ -68,9 +68,9 @@ const deleteReview = async (req, res) => {
         }
 
         // Check if the logged-in user owns the review
-        // if (review.userId.toString() !== userId) {
-        //     return res.status(403).json({ success: false, message: 'You are not authorized to delete this review.' });
-        // }
+        if (review.userId.toString() !== userId) {
+            return res.status(403).json({ success: false, message: 'You are not authorized to delete this review.' });
+        }
 
         // Delete the review
         await review.deleteOne(); // Or review.remove()

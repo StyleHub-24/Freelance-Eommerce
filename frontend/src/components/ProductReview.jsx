@@ -14,10 +14,13 @@ const ProductReviews = ({ productId }) => {
     const base64Url = token.split('.')[1]; // Get the payload part
     const base64 = base64Url.replace('-', '+').replace('_', '/'); // Replace URL-safe characters with base64 characters
     const decoded = JSON.parse(atob(base64)); // Decode the base64 to JSON
-    console.log(decoded)
+    // console.log(decoded)
     return decoded;
   };
-  const decoded = decodeToken(token).id;
+
+  // Check if the token is valid and user is authenticated also one thing that the user is not logged in they can view the reviews but they can't add or delete the reviews
+  const isLoggedIn = token ? true : false;
+  const decoded = isLoggedIn ? decodeToken(token).id : null;
 
   const handleSubmitReview = async (e) => {
     e.preventDefault();

@@ -102,7 +102,7 @@ const Product = () => {
             Reviews
           </button>
         </div>
-        {activeTab === 'description' && <ProductDescription />}
+        {activeTab === 'description' && <ProductDescription productId={productId} productDescription={productData.description} />}
         {activeTab === 'review' && <ProductReviews productId={productId}/>}
       </div>
       {/* display related products */}

@@ -11,14 +11,19 @@ const SearchBar = () => {
 
     const location = useLocation(); // to open search only in collection page
 
+    // useEffect(() => {
+    // //   console.log(location.pathname);
+    //     if(location.pathname.includes('collection')){
+    //         setVisible(true);
+    //     } else {
+    //         setVisible(false);
+    //     }
+    // }, [location])
     useEffect(() => {
-    //   console.log(location.pathname);
-        if(location.pathname.includes('collection')){
-            setVisible(true);
-        } else {
-            setVisible(false);
-        }
-    }, [location])
+        // Show the search bar only on Home and Collection pages
+        const currentPath = location.pathname;
+        setVisible(currentPath === '/' || currentPath.includes('collection'));
+      }, [location]);
     
 
   return showSearch && visible ? (

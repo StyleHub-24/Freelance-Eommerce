@@ -10,6 +10,8 @@ const ProductReviews = ({ productId }) => {
   const [rating, setRating] = useState(5);
   const [reviews, setReviews] = useState([]);
   const { token, backendUrl } = useContext(ShopContext); // Access the token from the context
+  const [showPopup, setShowPopup] = useState(false);
+  const [selectedReviewId, setSelectedReviewId] = useState(null);
 
   const decodeToken = (token) => {
     const base64Url = token.split('.')[1]; // Get the payload part
@@ -68,9 +70,9 @@ const ProductReviews = ({ productId }) => {
     }
   };
 
-  const handleRemoveReview = async (reviewId) => {
+  const handleRemoveReview = async () => {
     try {
-      const response = await fetch(backendUrl + `/api/review/delete/${reviewId}`, {
+      const response = await fetch(backendUrl + `/api/review/delete/${selectedReviewId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -90,6 +92,7 @@ const ProductReviews = ({ productId }) => {
       console.error('Error removing review:', error);
       toast.error('An error occurred while removing the review.');
     }
+    setShowPopup(false);
   };
   
   
@@ -116,6 +119,29 @@ const ProductReviews = ({ productId }) => {
 
   return (
     <div className="border p-6">
+     {/* Popup */}
+     {showPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 shadow-lg w-96">
+            <h3 className="text-xl font-semibold mb-4 text-center">Confirm Deletion</h3>
+            <p className="text-gray-600 text-center mb-6">Are you sure you want to remove this review?</p>
+            <div className="flex justify-between">
+              <button
+                onClick={() => setShowPopup(false)}
+                className="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleRemoveReview}
+                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* New Review Form */}
       <form onSubmit={handleSubmitReview} className="mb-8">
         <div className="mb-4">
@@ -170,7 +196,7 @@ const ProductReviews = ({ productId }) => {
               <div className="flex flex-col items-center">
                 <div className="text-sm text-gray-500">{new Date(review.date).toLocaleDateString()}</div>
                 {decoded && decoded === review.userId &&(
-                <div className="text-sm flex items-center justify-center h-6 w-6 bg-gray-200 rounded-full text-gray-500 cursor-pointer mt-2" onClick={() => handleRemoveReview(review._id)}>
+                <div className="text-sm flex items-center justify-center h-6 w-6 bg-gray-200 rounded-full text-gray-500 cursor-pointer mt-2" onClick={() =>{setSelectedReviewId(review._id); setShowPopup(true);}}>
                   X
                 </div>
                 )}

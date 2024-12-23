@@ -121,7 +121,7 @@ const ProductReviews = ({ productId }) => {
     <div className="border p-6">
      {/* Popup */}
      {showPopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 p-5 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 shadow-lg w-96">
             <h3 className="text-xl font-semibold mb-4 text-center">Confirm Deletion</h3>
             <p className="text-gray-600 text-center mb-6">Are you sure you want to remove this review?</p>

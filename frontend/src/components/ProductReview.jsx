@@ -5,41 +5,57 @@ import { useContext } from 'react';
 import { ShopContext } from '../context/ShopContext';
 import { useNavigate } from 'react-router-dom';
 
-const ProductReviews = ({ productId }) => {
+const ProductReviews = ({ productId , subCategory}) => {
   const [newReview, setNewReview] = useState('');
   const [rating, setRating] = useState(5);
   const [reviews, setReviews] = useState([]);
-  const { token, backendUrl } = useContext(ShopContext); // Access the token from the context
+  const { token, backendUrl } = useContext(ShopContext);
   const [showPopup, setShowPopup] = useState(false);
   const [selectedReviewId, setSelectedReviewId] = useState(null);
+  const [suggestedReviews, setSuggestedReviews] = useState([]);
 
-  const decodeToken = (token) => {
-    const base64Url = token.split('.')[1]; // Get the payload part
-    const base64 = base64Url.replace('-', '+').replace('_', '/'); // Replace URL-safe characters with base64 characters
-    const decoded = JSON.parse(atob(base64)); // Decode the base64 to JSON
-    // console.log(decoded)
-    return decoded;
+  // const suggestedReviews = [
+  //   "Amazing quality!",
+  //   "Fast shipping and well-packaged.",
+  //   "Exceeded my expectations!",
+  //   "Good value for money.",
+  //   "I would highly recommend this product."
+  // ];
+  const fetchSuggestedReviews = async () => {
+    try {
+      const response = await fetch(`${backendUrl}/api/review/show-suggested/${subCategory}`);
+      const result = await response.json();
+      setSuggestedReviews(result.suggested[0].messages);
+    } catch (error) {
+      console.error("No suggested reviews", error);
+    }
   };
 
-  // Check if the token is valid and user is authenticated also one thing that the user is not logged in they can view the reviews but they can't add or delete the reviews
+
+  const decodeToken = (token) => {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace('-', '+').replace('_', '/');
+    return JSON.parse(atob(base64));
+  };
+
   const isLoggedIn = token ? true : false;
   const decoded = isLoggedIn ? decodeToken(token).id : null;
-  console.log(decoded)
-  const navigate = useNavigate(); // Hook must be called at the top level of the component
+
+  const navigate = useNavigate();
 
   const handleSubmitReview = async (e) => {
     e.preventDefault();
-    if(decoded === null){
-      toast.warning("Please login first!")
-      navigate('/login'); // Redirect to the login page
+    if (decoded === null) {
+      toast.warning("Please login first!");
+      navigate('/login');
       setTimeout(() => {
-        window.scrollTo(0, 0); // Scroll to the top after navigating
+        window.scrollTo(0, 0);
       }, 0);
       return;
     }
 
     try {
-      const response = await fetch(backendUrl + '/api/review/add', {
+      const response = await fetch(`${backendUrl}/api/review/add`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -55,36 +71,38 @@ const ProductReviews = ({ productId }) => {
       const result = await response.json();
 
       if (result.success) {
-        toast.success("Review submited sucessfully!")
+        toast.success("Review submitted successfully!");
         setNewReview('');
         setRating(5);
-        fetchReviews(); // Refetch reviews after submitting a new one
+        fetchReviews();
       } else {
         toast.error(result.message);
-        // console.log(result.message)
       }
     } catch (error) {
       console.error('Error submitting review:', error);
-      // alert('An error occurred while submitting the review.');
-      toast.error('An error occurred while submitting the review.')
+      toast.error('An error occurred while submitting the review.');
     }
+  };
+
+  const handleSuggestionClick = (suggestion) => {
+    setNewReview((prev) => `${prev} ${suggestion}`.trim());
   };
 
   const handleRemoveReview = async () => {
     try {
-      const response = await fetch(backendUrl + `/api/review/delete/${selectedReviewId}`, {
+      const response = await fetch(`${backendUrl}/api/review/delete/${selectedReviewId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          token, // Include the token in the request headers
+          token
         },
       });
-  
+
       const result = await response.json();
-  
+
       if (result.success) {
         toast.success("Review removed successfully!");
-        fetchReviews(); // Refetch reviews after deleting one
+        fetchReviews();
       } else {
         toast.error(result.message);
       }
@@ -94,15 +112,11 @@ const ProductReviews = ({ productId }) => {
     }
     setShowPopup(false);
   };
-  
-  
 
   const fetchReviews = async () => {
     try {
       const response = await fetch(`${backendUrl}/api/review/${productId}`);
       const result = await response.json();
-      // console.log(reviews)
-
       if (result.success) {
         setReviews(result.reviews);
       } else {
@@ -113,14 +127,16 @@ const ProductReviews = ({ productId }) => {
     }
   };
 
-  useEffect(() => {
-    fetchReviews();
-  }, [productId]);
+    // UseEffect to fetch reviews and suggested reviews on load
+    useEffect(() => {
+      fetchReviews();
+      fetchSuggestedReviews(); // Fetch suggested reviews when the component mounts or subcategory changes
+    }, [productId, subCategory]);
 
   return (
     <div className="border p-6">
-     {/* Popup */}
-     {showPopup && (
+      {/* Popup */}
+      {showPopup && (
         <div className="fixed inset-0 bg-black bg-opacity-50 p-5 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 shadow-lg w-96">
             <h3 className="text-xl font-semibold mb-4 text-center">Confirm Deletion</h3>
@@ -142,6 +158,7 @@ const ProductReviews = ({ productId }) => {
           </div>
         </div>
       )}
+
       {/* New Review Form */}
       <form onSubmit={handleSubmitReview} className="mb-8">
         <div className="mb-4">
@@ -156,9 +173,20 @@ const ProductReviews = ({ productId }) => {
               />
             ))}
           </div>
-          <label htmlFor="review" className="block text-sm font-medium text-gray-700 mb-2">
-            Your Review
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Suggestions</label>
+          <div className="flex flex-wrap gap-2 mb-4">
+            {suggestedReviews.map((suggestion, index) => (
+              <button
+                key={index}
+                type="button"
+                onClick={() => handleSuggestionClick(suggestion)}
+                className="bg-gray-200 text-gray-700 px-3 py-1 rounded hover:bg-gray-300"
+              >
+                {suggestion}
+              </button>
+            ))}
+          </div>
+          <label htmlFor="review" className="block text-sm font-medium text-gray-700 mb-2">Your Review</label>
           <textarea
             id="review"
             rows={4}
@@ -195,13 +223,15 @@ const ProductReviews = ({ productId }) => {
               </div>
               <div className="flex flex-col items-center">
                 <div className="text-sm text-gray-500">{new Date(review.date).toLocaleDateString()}</div>
-                {decoded && decoded === review.userId &&(
-                <div className="text-sm flex items-center justify-center h-6 w-6 bg-gray-200 rounded-full text-gray-500 cursor-pointer mt-2" onClick={() =>{setSelectedReviewId(review._id); setShowPopup(true);}}>
-                  X
-                </div>
+                {decoded && decoded === review.userId && (
+                  <div
+                    className="text-sm flex items-center justify-center h-6 w-6 bg-gray-200 rounded-full text-gray-500 cursor-pointer mt-2"
+                    onClick={() => { setSelectedReviewId(review._id); setShowPopup(true); }}
+                  >
+                    X
+                  </div>
                 )}
               </div>
-
             </div>
             <p className="text-gray-600 mt-2">{review.content}</p>
           </div>

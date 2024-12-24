@@ -103,7 +103,7 @@ const Product = () => {
           </button>
         </div>
         {activeTab === 'description' && <ProductDescription productId={productId} productDescription={productData.description} />}
-        {activeTab === 'review' && <ProductReviews productId={productId}/>}
+        {activeTab === 'review' && <ProductReviews productId={productId} subCategory={productData.subCategory}/>}
       </div>
       {/* display related products */}
       <RelatedProducts category={productData.category} subCategory={productData.subCategory} />

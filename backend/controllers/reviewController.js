@@ -1,5 +1,6 @@
 import reviewModel from '../models/reviewModel.js';
 import userModel from "../models/userModel.js"; // Import the user model
+import SuggestedReview from '../models/SuggestedReview.js';
 
 // Function to add a review
 const addReview = async (req, res) => {
@@ -82,4 +83,59 @@ const deleteReview = async (req, res) => {
     }
 };
 
-export { addReview, listReviews, deleteReview };
+
+
+const addSuggestedReview = async (req, res) => {
+  const { subcategory, messages } = req.body;
+
+  try {
+    // Check if a review already exists for the given subcategory
+    const existingReview = await SuggestedReview.findOne({ subcategory });
+
+    if (existingReview) {
+      // If review exists, update the existing one
+      existingReview.messages = messages;
+      await existingReview.save();
+      return res.status(200).json({ 
+        success: true, 
+        message: 'Subcategory already exists. The review has been updated.' 
+      });
+    }
+
+    // If no review exists, create a new one
+    const newSuggestedReview = new SuggestedReview({
+      subcategory,
+      messages,
+    });
+
+    await newSuggestedReview.save();
+    res.status(200).json({ 
+      success: true, 
+      message: 'Suggested review added successfully' 
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error saving suggested review' 
+    });
+  }
+};
+const showSuggestedReview = async (req, res) => {
+  try {
+    const { subCategory } = req.params;
+    const suggested = await SuggestedReview.find({ subcategory: subCategory });
+    if (suggested.length === 0) {
+      return res.status(404).json({ success: false, message: "No suggested reviews found for this subcategory." });
+    }
+    res.status(200).json({ success: true, suggested });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Server error while fetching suggested reviews." });
+  }
+};
+
+
+
+
+export { addReview, listReviews, deleteReview, addSuggestedReview, showSuggestedReview };

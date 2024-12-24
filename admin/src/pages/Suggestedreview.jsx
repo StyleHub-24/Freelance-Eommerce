@@ -84,36 +84,37 @@ const Suggestedreview = ({ token }) => {
         </div>
 
         {/* Messages List */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Messages</label>
-          {messages.map((message, index) => (
-            <div key={index} className="flex items-center gap-2 mb-3">
-              <input
-                type="text"
-                value={message}
-                onChange={(e) => handleInputChange(e.target.value, index)}
-                placeholder={`Message ${index + 1}`}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <button
-                type="button"
-                onClick={() => handleRemoveMessage(index)}
-                className="text-sm font-medium text-gray-700"
-              >
-                X
-              </button>
-            </div>
-          ))}
-          {messages.length < 10 && (
-            <button
-              type="button"
-              onClick={handleAddMessage}
-              className="rounded-md bg-slate-800 py-2 px-4 border border-transparent text-center text-sm text-white transition-all shadow-md hover:shadow-lg focus:bg-slate-700 focus:shadow-none active:bg-slate-700 hover:bg-slate-700 active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
-            >
-              Add Message
-            </button>
-          )}
-        </div>
+        <div className="space-y-4">
+  <label className="block text-sm font-medium text-gray-700 mb-2">Messages</label>
+  {messages.map((message, index) => (
+    <div key={index} className="flex items-center gap-2 mb-3">
+      <input
+        type="text"
+        value={message}
+        onChange={(e) => handleInputChange(e.target.value, index)}
+        placeholder={`Message ${index + 1}`}
+        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+      <button
+        type="button"
+        onClick={() => handleRemoveMessage(index)}
+        className="text-sm font-medium text-gray-700"
+      >
+        X
+      </button>
+    </div>
+  ))}
+  {messages.length < 10 && (
+    <button
+      type="button"
+      onClick={handleAddMessage}
+      className="rounded-md bg-slate-800 py-2 px-4 border border-transparent text-center text-sm text-white transition-all shadow-md hover:shadow-lg focus:bg-slate-700 focus:shadow-none active:bg-slate-700 hover:bg-slate-700 active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
+    >
+      Add Message
+    </button>
+  )}
+</div>
+
 
         {/* Submit Button */}
         <div>

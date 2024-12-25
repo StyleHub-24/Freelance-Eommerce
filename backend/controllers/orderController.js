@@ -27,7 +27,8 @@ const placeOrder = async (req, res) => {
             amount,
             paymentMethod: "COD",
             payment: false,
-            date: Date.now()
+            date: Date.now(),
+            estimatedDelivery: Date.now() + 7 * 24 * 60 * 60 * 1000
         }
 
         const newOrder = new orderModel(orderData)
@@ -59,7 +60,8 @@ const placeOrderStripe = async (req, res) => {
             amount,
             paymentMethod: "Stripe",
             payment: false,
-            date: Date.now()
+            date: Date.now(),
+            estimatedDelivery: Date.now() + 7 * 24 * 60 * 60 * 1000
         }
 
         const newOrder = new orderModel(orderData)
@@ -139,7 +141,8 @@ const placeOrderRazorpay = async (req, res) => {
             amount,
             paymentMethod: "Razorpay",
             payment: false,
-            date: Date.now()
+            date: Date.now(),
+            estimatedDelivery: Date.now() + 7 * 24 * 60 * 60 * 1000
         }
 
         const newOrder = new orderModel(orderData)
@@ -208,14 +211,14 @@ const allOrders = async (req, res) => {
 const userOrders = async (req, res) => {
     try {
         
-        const { userId } = req.body
+        const { userId } = req.body;
 
-        const orders = await orderModel.find({ userId })
-        res.json({success: true, orders})
+        const orders = await orderModel.find({ userId });
+        res.json({success: true, orders});
 
     } catch (error) {
         console.log(error);
-        res.json({ success: false, message: error.message })
+        res.json({ success: false, message: error.message });
     }
 }
 
@@ -299,8 +302,37 @@ const updateRefundStatus = async (req, res) => {
         res.json({ success: false, message: error.message });
     }
 };
+// function to update the estimated delivery date
+const updateEstimatedDelivery = async (req, res) => {
+  const { orderId, estimatedDelivery } = req.body;
+
+  try {
+    // Ensure the 'orderId' and 'estimatedDelivery' are provided
+    if (!orderId || !estimatedDelivery) {
+      return res.status(400).json({ success: false, message: 'Order ID and Estimated Delivery date are required.' });
+    }
+
+    // Find and update the order's estimated delivery date
+    const updatedOrder = await orderModel.findByIdAndUpdate(
+      orderId, 
+      { estimatedDelivery }, 
+      { new: true }
+    );
+
+    // Check if the order was found and updated
+    if (updatedOrder) {
+      return res.status(200).json({ success: true, message: 'Estimated delivery date updated successfully.', order: updatedOrder });
+    } else {
+      return res.status(404).json({ success: false, message: 'Order not found.' });
+    }
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: 'Internal server error.' });
+  }
+};
+
 
   
   
 
-export { placeOrder, placeOrderStripe, placeOrderRazorpay, allOrders, userOrders, updateStatus, verifyStripe, verifyRazorpay, cancelOrder, updateRefundStatus }
+export { placeOrder, placeOrderStripe, placeOrderRazorpay, allOrders, userOrders, updateStatus, verifyStripe, verifyRazorpay, cancelOrder, updateRefundStatus, updateEstimatedDelivery }

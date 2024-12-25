@@ -20,6 +20,7 @@ const PlaceOrder = () => {
     zipcode: '',
     country: '',
     phone: '',
+    alternativephone:''
   })
 
   const onChangeHandler = (event) => {
@@ -157,6 +158,7 @@ const PlaceOrder = () => {
             <input required onChange={onChangeHandler} name='country' value={formData.country} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="text" placeholder='Country' />
           </div>
           <input required onChange={onChangeHandler} name='phone' value={formData.phone} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="number" placeholder='Phone' />
+          <input onChange={onChangeHandler} name='alternativephone' value={formData.alternativephone} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="number" placeholder='Alternative Number (Optional)' />
       </div>
       {/* Right Side */}
       <div className='mt-8'>

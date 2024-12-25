@@ -7,6 +7,7 @@ const Navbar = () => {
 
   const {
     setShowSearch,
+    showSearch,
     getCartCount,
     navigate,
     token,
@@ -47,7 +48,7 @@ const Navbar = () => {
       </ul>
       <div className="flex items-center gap-6">
         <img
-          onClick={() => setShowSearch(true)}
+          onClick={() =>{!showSearch?setShowSearch(true):setShowSearch(false)}}
           src={assets.search_icon}
           alt="search"
           className="w-5 cursor-pointer"

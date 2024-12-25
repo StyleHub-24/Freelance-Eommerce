@@ -36,13 +36,14 @@ const Orders = () => {
             item["date"] = order.date;
             item["orderId"] = order._id;
             item["refunded"] = order.refunded;
+            item["estimatedDelivery"] = order.estimatedDelivery;
             allOrdersItem.push(item);
           });
         });
         // console.log(allOrdersItem);
         setOrderData(allOrdersItem.reverse()); // to display the latest order first
       }
-    } catch (error) {}
+    } catch (error) { }
   };
 
   const cancelOrder = async (orderId) => {
@@ -78,7 +79,6 @@ const Orders = () => {
     setSelectedProductId(null);
     setIsReviewOpen(false);
   };
-
   return (
     <div className="border-t pt-16">
       <div className="text-2xl">
@@ -103,11 +103,18 @@ const Orders = () => {
                   <p>Size: {item.size}</p>
                 </div>
                 <p className="mt-1">
-                  Date:{" "}
+                  Ordered Date:{" "}
                   <span className="text-gray-400">
                     {new Date(item.date).toDateString()}
                   </span>
                 </p>
+                <p className="mt-1">
+                  Estimated Delivery:{" "}
+                  <span className="text-gray-400">
+                    {new Date(item.estimatedDelivery).toDateString()}
+                  </span>
+                </p>
+
                 <p className="mt-1">
                   Payment:{" "}
                   <span className="text-gray-400">{item.paymentMethod}</span>
@@ -120,9 +127,8 @@ const Orders = () => {
             <div className="md:w-1/2 flex justify-between">
               <div className="flex items-center gap-2">
                 <p
-                  className={`min-w-2 h-2 rounded-full ${
-                    item.status === "Canceled" ? "bg-red-500" : "bg-green-500"
-                  }`}
+                  className={`min-w-2 h-2 rounded-full ${item.status === "Canceled" ? "bg-red-500" : "bg-green-500"
+                    }`}
                 ></p>
                 <p className="text-sm md:text-base">{item.status}</p>
               </div>

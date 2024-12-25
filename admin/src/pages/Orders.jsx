@@ -27,7 +27,7 @@ const Orders = ({token}) => {
       }
 
     } catch (error) {
-      console.log(error);
+      // console.log(error);
       toast.error(error.message)
     }
   }
@@ -39,7 +39,7 @@ const Orders = ({token}) => {
         await fetchAllOrders()
       }
     } catch (error) {
-      console.log(error);
+      // console.log(error);
       toast.error(error.message)
     }
   }
@@ -52,11 +52,32 @@ const Orders = ({token}) => {
         await fetchAllOrders();
       }
     } catch (error) {
-      console.log(error);
+      // console.log(error);
       toast.error(error.message);
     }
   };
-
+  const handleEstimatedDeliveryChange = async ( orderId,event) => {
+    const newDate = new Date(event.target.value).getTime();
+    try {
+      // Send the updated estimated delivery date to the backend
+      const response = await axios.post(
+        backendUrl + '/api/order/updateEstimatedDelivery',
+        { orderId, estimatedDelivery: newDate },
+        { headers: { token } }
+      );
+  
+      // Check if the update was successful
+      if (response.data.success) {
+        toast.success(response.data.message); // Show success message
+        await fetchAllOrders(); // Optionally refresh orders if needed
+      }
+    } catch (error) {
+      // console.log(error);
+      toast.error(error.message); // Show error message if the request fails
+    }
+  };
+  
+  
   useEffect(() => {
     fetchAllOrders();
   }, [token])
@@ -86,15 +107,20 @@ const Orders = ({token}) => {
                 <p>{order.address.city + ", " + order.address.state + ", " + order.address.country + ", " + order.address.zipcode}</p>
               </div>
               <p>{order.address.phone}</p>
+              <p>{order.address.alternativephone?order.address.alternativephone:''}</p>
             </div>
             <div>
                 <p className='text-sm sm:text-[15px]'>Items: {order.items.length}</p>
                 <p className='mt-3'>Methd: {order.paymentMethod}</p>
                 <p>Payment: { order.payment ? 'Done' : 'Pending' }</p>
                 <p>Date: {new Date(order.date).toLocaleDateString()}</p>
+                <span>
+                <p>Delivery Within:</p>
+                <input type="date" value={order.estimatedDelivery ? new Date(order.estimatedDelivery).toISOString().split('T')[0] : ''}onChange={(e) => handleEstimatedDeliveryChange(order._id, e)} className="text-sm p-0 ps-1 border border-gray-300 rounded-md  sm:text-xs  md:text-sm"/>
+                </span>
             </div>
-            <p className='text-sm sm:text-[15px]'>{currency}{order.amount}</p>
-            <select onChange={(event) => statusHandler(event, order._id)} value={order.status} className='p-2 font-semibold' disabled={order.status === 'Canceled'}>
+            <p className='text-sm sm:text-[15px]'>Total: {currency}{order.amount}</p>
+            <select onChange={(event) => statusHandler(event, order._id)} value={order.status} className='p-1 font-semibold' disabled={order.status === 'Canceled'}>
               <option value="Order Placed">Order Placed</option>
               <option value="Packing">Packing</option>
               <option value="Shipped">Shipped</option>

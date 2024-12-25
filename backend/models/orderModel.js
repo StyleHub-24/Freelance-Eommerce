@@ -10,6 +10,7 @@ const orderSchema = new mongoose.Schema({
     payment: { type: Boolean, required: true , default: false},
     refunded: { type: Boolean, required: true, default: false },  // New Field
     date: { type: Number, required: true },
+    estimatedDelivery: { type: Number, required: true },
 })
 
 const orderModel = mongoose.models.order || mongoose.model("order", orderSchema);

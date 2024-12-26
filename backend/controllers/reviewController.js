@@ -88,6 +88,11 @@ const deleteReview = async (req, res) => {
 const addSuggestedReview = async (req, res) => {
   const { subcategory, messages } = req.body;
 
+  // Check if messages is empty
+  if (!messages || messages.length === 0) {
+    return res.status(400).json({ success: false, message: 'Messages array cannot be empty' });
+  }
+
   try {
     // Check if a review already exists for the given subcategory
     const existingReview = await SuggestedReview.findOne({ subcategory });

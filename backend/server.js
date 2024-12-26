@@ -8,7 +8,8 @@ import productRouter from "./routes/productRoute.js";
 import cartRouter from "./routes/cartRoute.js";
 import orderRouter from "./routes/orderRoute.js";
 import migrateRefundField from "./config/migrateRefundField.js";
-import reviewRouter from "./routes/ReviewRouter.js";
+import reviewRouter from "./routes/ReviewRoute.js";
+import {updateRouter} from "./routes/updateRoute.js"
 
 // App config
 const app = express();
@@ -28,6 +29,7 @@ app.use('/api/product', productRouter)
 app.use('/api/cart', cartRouter)
 app.use('/api/order', orderRouter)
 app.use('/api/review', reviewRouter);
+app.use('/api/productUpdate', updateRouter); 
 
 app.get('/', (req, res) => {
     res.send('API WORKING');

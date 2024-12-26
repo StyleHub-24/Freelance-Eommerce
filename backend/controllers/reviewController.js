@@ -1,6 +1,6 @@
 import reviewModel from '../models/reviewModel.js';
 import userModel from "../models/userModel.js"; // Import the user model
-import SuggestedReview from '../models/SuggestedReview.js';
+import SuggestedReview from '../models/SuggestedReviewModel.js';
 
 // Function to add a review
 const addReview = async (req, res) => {

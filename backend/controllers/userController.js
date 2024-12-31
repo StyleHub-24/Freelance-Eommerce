@@ -3,7 +3,7 @@ import userModel from "../models/userModel.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer"
-
+import { v2 as cloudinary } from 'cloudinary';
 const createToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET)
 }
@@ -176,4 +176,79 @@ const resetPassword = async (req, res) => {
     }
 };
 
-export { loginUser, registerUser, adminLogin, forgotPassword, resetPassword }
+// Function to get user profile
+const getUserProfile = async (req, res) => {
+    try {
+        const { userId } = req.body;  // Get the user ID from the auth middleware
+        const user = await userModel.findById(userId); // Select relevant fields
+
+        if (!user) {
+            return res.json({ success: false, message: "User not found!" });
+        }
+        // console.log(user);
+
+        res.json({ success: true, user });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+// Function to update user profile
+const updateUserProfile = async (req, res) => {
+    try {
+      const { phoneNumber, gender, userId, name, email, bio, address } = req.body;
+      const addressObject = JSON.parse(address); // Parse the stringified address object
+  
+      // First get current user 
+      const currentUser = await userModel.findById(userId);
+      if (!currentUser) {
+        return res.json({ success: false, message: "User not found!" });
+      }
+  
+      let profilePictureUrl = currentUser.profilePicture; // Keep existing profile picture by default
+  
+      // Only handle image upload if a new file is provided
+      if (req.file) {
+        // Delete old image from cloudinary if it exists and isn't the default
+        if (currentUser.profilePicture && currentUser.profilePicture !== "default-image-url") {
+          try {
+            const parts = currentUser.profilePicture.split('/');
+            const lastPart = parts[parts.length - 1];
+            const publicId = lastPart.split('.')[0];
+            await cloudinary.uploader.destroy(publicId);
+          } catch (error) {
+            console.log("Error deleting old image:", error);
+          }
+        }
+  
+        // Upload new image
+        const result = await cloudinary.uploader.upload(req.file.path, { resource_type: "image" });
+        profilePictureUrl = result.secure_url;
+      }
+  
+      const updatedUser = await userModel.findByIdAndUpdate(
+        userId,
+        {
+          $set: {
+            name,
+            email,
+            phoneNumber: phoneNumber || "",
+            gender: gender || "other",
+            profilePicture: profilePictureUrl, // Use either new uploaded image URL or keep existing one
+            bio: bio || "",
+            address: addressObject
+          }
+        },
+        { new: true }
+      );
+  
+      res.json({ success: true, message: "Profile updated successfully!", updatedUser });
+    } catch (error) {
+      console.log(error);
+      res.json({ success: false, message: error.message });
+    }
+  };
+
+
+export { loginUser, registerUser, adminLogin, forgotPassword, resetPassword, getUserProfile, updateUserProfile }

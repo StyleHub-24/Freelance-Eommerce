@@ -17,9 +17,10 @@ import 'react-toastify/dist/ReactToastify.css';
 import Verify from './pages/Verify'
 import ResetPassword from './pages/ResetPassword'
 import { ShopContext } from './context/ShopContext'
+import UserProfile from './components/UserProfile'
 const App = () => {
 
-  const {backendUrl} = useContext(ShopContext)
+  const {backendUrl, token} = useContext(ShopContext)
 
   return (
     <div className='px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]'>
@@ -39,6 +40,7 @@ const App = () => {
         <Route path='/orders' element={<Orders />} />
         <Route path='/verify' element={<Verify />} />
         <Route path="/reset-password/:token" element={<ResetPassword backendUrl={backendUrl} />} />
+        <Route path='/user-profile' element={<UserProfile token={token}/>} />
       </Routes>
       <Footer/>
     </div>

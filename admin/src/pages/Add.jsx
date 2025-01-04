@@ -3,150 +3,257 @@ import { assets } from '../assets/assets'
 import axios from 'axios'
 import { backendUrl } from '../App'
 import { toast } from 'react-toastify'
+
 const Add = ({ token }) => {
-
-    const [image1, setImage1] = useState(false)
-    const [image2, setImage2] = useState(false)
-    const [image3, setImage3] = useState(false)
-    const [image4, setImage4] = useState(false)
-
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [price, setPrice] = useState('');
     const [category, setCategory] = useState('Men');
     const [subCategory, setSubCategory] = useState('Topwear');
     const [bestseller, setBestseller] = useState(false);
-    const [sizes, setSizes] = useState([]);
+    
+    const [colorVariants, setColorVariants] = useState([
+        { color: '', images: [null, null, null, null], sizes: [], stock: '' }
+    ]);
+
+    const handleColorChange = (index, color) => {
+        const newVariants = [...colorVariants];
+        newVariants[index].color = color;
+        setColorVariants(newVariants);
+    };
+
+    const handleStockChange = (index, stock) => {
+        const newVariants = [...colorVariants];
+        newVariants[index].stock = parseInt(stock) || 0;
+        setColorVariants(newVariants);
+    };
+
+    const handleImageChange = (variantIndex, imageIndex, file) => {
+        const newVariants = [...colorVariants];
+        newVariants[variantIndex].images[imageIndex] = file;
+        setColorVariants(newVariants);
+    };
+
+    const handleSizeToggle = (variantIndex, size) => {
+        const newVariants = [...colorVariants];
+        const sizes = newVariants[variantIndex].sizes;
+        newVariants[variantIndex].sizes = sizes.includes(size) 
+            ? sizes.filter(s => s !== size)
+            : [...sizes, size];
+        setColorVariants(newVariants);
+    };
+
+    const addColorVariant = () => {
+        setColorVariants([...colorVariants, { 
+            color: '', 
+            images: [null, null, null, null], 
+            sizes: [],
+            stock: '' 
+        }]);
+    };
+
+    const removeColorVariant = (index) => {
+        setColorVariants(colorVariants.filter((_, i) => i !== index));
+    };
 
     const onSubmitHandler = async (e) => {
         e.preventDefault();
-
         try {
-
             const formData = new FormData();
+            formData.append("name", name);
+            formData.append("description", description);
+            formData.append("price", price);
+            formData.append("category", category);
+            formData.append("subCategory", subCategory);
+            formData.append("bestseller", bestseller);
 
-            formData.append("name", name)
-            formData.append("description", description)
-            formData.append("price", price)
-            formData.append("category", category)
-            formData.append("subCategory", subCategory)
-            formData.append("bestseller", bestseller)
-            formData.append("sizes", JSON.stringify(sizes))
+            // Add color variants data
+            const variantsData = colorVariants.map(variant => ({
+                color: variant.color,
+                sizes: variant.sizes,
+                stock: variant.stock
+            }));
+            formData.append("colorVariants", JSON.stringify(variantsData));
 
-            image1 && formData.append("image1", image1)
-            image2 && formData.append("image2", image2)
-            image3 && formData.append("image3", image3)
-            image4 && formData.append("image4", image4)
+            // Add images for each variant
+            colorVariants.forEach((variant, variantIndex) => {
+                variant.images.forEach((image, imageIndex) => {
+                    if (image) {
+                        formData.append(`image${variantIndex}_${imageIndex + 1}`, image);
+                    }
+                });
+            });
 
-            const response = await axios.post(backendUrl + "/api/product/add", formData, { headers: { token } })
-
-            // console.log(response.data);
+            const response = await axios.post(
+                `${backendUrl}/api/product/add`, 
+                formData, 
+                { headers: { token } }
+            );
 
             if (response.data.success) {
-                // console.log(response.data.message);
-                toast.success(response.data.message)
-                setName('')
-                setDescription('')
-                setImage1(false)
-                setImage2(false)
-                setImage3(false)
-                setImage4(false)
-                setPrice('')
-                setSizes([])
+                toast.success(response.data.message);
+                setName('');
+                setDescription('');
+                setPrice('');
+                setColorVariants([{ color: '', images: [null, null, null, null], sizes: [], stock: '' }]);
             } else {
-                toast.error(response.data.message)
+                toast.error(response.data.message);
             }
-
-
         } catch (error) {
             console.log(error);
-            toast.error(error.message)
-
+            toast.error(error.message);
         }
-    }
-
+    };
 
     return (
         <form onSubmit={onSubmitHandler} className='flex flex-col w-full items-start gap-3'>
-            <div>
-                <p className='mb-2'>Upload Image</p>
-                <div className='flex gap-2'>
-                    <label htmlFor="image1">
-                        <img className='w-20' src={!image1 ? assets.upload_area : URL.createObjectURL(image1)} alt="" />
-                        <input onChange={(e) => setImage1(e.target.files[0])} type="file" id="image1" hidden />
-                    </label>
-                    <label htmlFor="image2">
-                        <img className='w-20' src={!image2 ? assets.upload_area : URL.createObjectURL(image2)} alt="" />
-                        <input onChange={(e) => setImage2(e.target.files[0])} type="file" id="image2" hidden />
-                    </label>
-                    <label htmlFor="image3">
-                        <img className='w-20' src={!image3 ? assets.upload_area : URL.createObjectURL(image3)} alt="" />
-                        <input onChange={(e) => setImage3(e.target.files[0])} type="file" id="image3" hidden />
-                    </label>
-                    <label htmlFor="image4">
-                        <img className='w-20' src={!image4 ? assets.upload_area : URL.createObjectURL(image4)} alt="" />
-                        <input onChange={(e) => setImage4(e.target.files[0])} type="file" id="image4" hidden />
-                    </label>
-                </div>
+            {/* Basic product info */}
+            <div className='w-full'>
+                <input 
+                    required 
+                    value={name} 
+                    onChange={(e) => setName(e.target.value)} 
+                    className='w-full max-w-[500px] px-3 py-2' 
+                    type="text" 
+                    placeholder='Product Name' 
+                />
             </div>
             <div className='w-full'>
-                <p className='mb-2'>Product Name</p>
-                <input  onChange={(e) => setName(e.target.value)} value={name} className='w-full max-w-[500px] px-3 py-2' type="text" placeholder='Type here' required />
+                <textarea 
+                    required 
+                    value={description} 
+                    onChange={(e) => setDescription(e.target.value)} 
+                    className='w-full max-w-[500px] px-3 py-2' 
+                    placeholder='Product Description' 
+                />
             </div>
-            <div className='w-full'>
-                <p className='mb-2'>Product Description</p>
-                <textarea  onChange={(e) => setDescription(e.target.value)} value={description} className='w-full max-w-[500px] px-3 py-2' type="text" placeholder='Write content here' required />
-            </div>
+
+            {/* Category selectors and price */}
             <div className='flex flex-col sm:flex-row gap-2 w-full sm:gap-8'>
-                <div>
-                    <p className='mb-2'>Product Category</p>
-                    <select onChange={(e) => setCategory(e.target.value)} className='w-full px-3 py-2'>
-                        <option value="Men">Men</option>
-                        <option value="Women">Women</option>
-                        <option value="Kids">Kids</option>
-                    </select>
-                </div>
-                <div>
-                    <p className='mb-2'>Sub Category</p>
-                    <select onChange={(e) => setSubCategory(e.target.value)} className='w-full px-3 py-2'>
-                        <option value="Topwear">Topwear</option>
-                        <option value="Bottomwear">Bottomwear</option>
-                        <option value="Winterwear">Winterwear</option>
-                    </select>
-                </div>
-                <div>
-                    <p className='mb-2'>Product Price</p>
-                    <input required onChange={(e) => setPrice(e.target.value)} value={price} className='w-full px-3 py-2 sm:w-[120px]' type="Number" placeholder='25' min={1} />
-                </div>
+                <select 
+                    onChange={(e) => setCategory(e.target.value)} 
+                    className='px-3 py-2'
+                >
+                    <option value="Men">Men</option>
+                    <option value="Women">Women</option>
+                    <option value="Kids">Kids</option>
+                </select>
+                <select 
+                    onChange={(e) => setSubCategory(e.target.value)} 
+                    className='px-3 py-2'
+                >
+                    <option value="Topwear">Topwear</option>
+                    <option value="Bottomwear">Bottomwear</option>
+                    <option value="Winterwear">Winterwear</option>
+                </select>
+                <input 
+                    required 
+                    value={price} 
+                    onChange={(e) => setPrice(e.target.value)} 
+                    className='px-3 py-2 w-[120px]' 
+                    type="number" 
+                    placeholder='Price' 
+                    min={1} 
+                />
             </div>
-            <div>
-                <p className='mb-2'>Product Sizes</p>
-                <div className='flex gap-3'>
-                    <div onClick={() => setSizes(prev => prev.includes('S') ? prev.filter(item => item !== 'S') : [...prev, 'S'])}>
-                        <p className={`${sizes.includes('S') ? "bg-pink-100" : "bg-slate-200"} px-3 py-1 cursor-pointer`}>S</p>
+
+            {/* Color variants section */}
+            {colorVariants.map((variant, variantIndex) => (
+                <div key={variantIndex} className='w-full border-b pb-4 mb-4'>
+                    <div className='flex justify-between items-center mb-3'>
+                    <div className='flex gap-4'>
+                            <input
+                                required
+                                value={variant.color}
+                                onChange={(e) => handleColorChange(variantIndex, e.target.value)}
+                                className='px-3 py-2'
+                                type="text"
+                                placeholder="Color name"
+                            />
+                            <input
+                                required
+                                value={variant.stock}
+                                onChange={(e) => handleStockChange(variantIndex, e.target.value)}
+                                className='px-3 py-2 w-[100px]'
+                                type="number"
+                                placeholder="Stock"
+                                min={0}
+                            />
+                        </div>
+                        {variantIndex > 0 && (
+                            <button 
+                                type="button"
+                                onClick={() => removeColorVariant(variantIndex)}
+                                className='text-red-500'
+                            >
+                                Remove Color
+                            </button>
+                        )}
                     </div>
-                    <div onClick={() => setSizes(prev => prev.includes('M') ? prev.filter(item => item !== 'M') : [...prev, 'M'])}>
-                        <p className={`${sizes.includes('M') ? "bg-pink-100" : "bg-slate-200"} px-3 py-1 cursor-pointer`}>M</p>
+
+                    {/* Image uploads */}
+                    <div className='flex gap-2 mb-3'>
+                        {variant.images.map((image, imageIndex) => (
+                            <label key={imageIndex} className='cursor-pointer'>
+                                <img 
+                                    className='w-20' 
+                                    src={!image ? assets.upload_area : URL.createObjectURL(image)} 
+                                    alt="" 
+                                />
+                                <input
+                                    type="file"
+                                    hidden
+                                    onChange={(e) => handleImageChange(variantIndex, imageIndex, e.target.files[0])}
+                                />
+                            </label>
+                        ))}
                     </div>
-                    <div onClick={() => setSizes(prev => prev.includes('L') ? prev.filter(item => item !== 'L') : [...prev, 'L'])}>
-                        <p className={`${sizes.includes('L') ? "bg-pink-100" : "bg-slate-200"} px-3 py-1 cursor-pointer`}>L</p>
-                    </div>
-                    <div onClick={() => setSizes(prev => prev.includes('XL') ? prev.filter(item => item !== 'XL') : [...prev, 'XL'])}>
-                        <p className={`${sizes.includes('XL') ? "bg-pink-100" : "bg-slate-200"} px-3 py-1 cursor-pointer`}>XL</p>
-                    </div>
-                    <div onClick={() => setSizes(prev => prev.includes('XXL') ? prev.filter(item => item !== 'XXL') : [...prev, 'XXL'])}>
-                        <p className={`${sizes.includes('XXL') ? "bg-pink-100" : "bg-slate-200"} px-3 py-1 cursor-pointer`}>XXL</p>
+
+                    {/* Size selection */}
+                    <div className='flex gap-3'>
+                        {['S', 'M', 'L', 'XL', 'XXL'].map((size) => (
+                            <div 
+                                key={size}
+                                onClick={() => handleSizeToggle(variantIndex, size)}
+                                className='cursor-pointer'
+                            >
+                                <p className={`${
+                                    variant.sizes.includes(size) ? "bg-pink-100" : "bg-slate-200"
+                                } px-3 py-1`}>
+                                    {size}
+                                </p>
+                            </div>
+                        ))}
                     </div>
                 </div>
-            </div>
+            ))}
+
+            <button 
+                type="button"
+                onClick={addColorVariant}
+                className='bg-gray-200 px-4 py-2 rounded'
+            >
+                Add Color Variant
+            </button>
 
             <div className='flex gap-3 mt-2'>
-                <input onChange={() => setBestseller(prev => !prev)} checked={bestseller} type="checkbox" id="bestseller" />
-                <label className='cursor-pointer' htmlFor="bestseller">Add to bestseller</label>
+                <input 
+                    onChange={() => setBestseller(prev => !prev)} 
+                    checked={bestseller} 
+                    type="checkbox" 
+                    id="bestseller" 
+                />
+                <label htmlFor="bestseller">Add to bestseller</label>
             </div>
-            <button type="submit" className='rounded-md bg-slate-800 py-2 px-4 border border-transparent text-center text-sm text-white transition-all shadow-md hover:shadow-lg focus:bg-slate-700 focus:shadow-none active:bg-slate-700 hover:bg-slate-700 active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none'>ADD</button>
-        </form>
-    )
-}
 
-export default Add
+            <button 
+                type="submit" 
+                className='rounded-md bg-slate-800 py-2 px-4 text-white hover:bg-slate-700'
+            >
+                ADD PRODUCT
+            </button>
+        </form>
+    );
+};
+
+export default Add;

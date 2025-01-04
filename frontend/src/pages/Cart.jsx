@@ -14,18 +14,20 @@ const Cart = () => {
   useEffect(() => {
     if (products.length > 0) {
       const tempData = [];
-      for (const items in cartItems) {
-        for (const item in cartItems[items]) {
-          if (cartItems[items][item] > 0) {
-            tempData.push({
-              _id: items,
-              size: item,
-              quantity: cartItems[items][item],
-            });
+      for (const productId in cartItems) {
+        for (const color in cartItems[productId]) {
+          for (const size in cartItems[productId][color]) {
+            if (cartItems[productId][color][size] > 0) {
+              tempData.push({
+                _id: productId,
+                color: color,
+                size: size,
+                quantity: cartItems[productId][color][size],
+              });
+            }
           }
         }
       }
-      // console.log(tempData);
       setCartData(tempData);
     }
   }, [cartItems, products]);
@@ -42,6 +44,12 @@ const Cart = () => {
             (product) => product._id === item._id
           );
 
+          const colorVariant = productData?.colorVariants.find(
+            (variant) => variant.color === item.color
+          );
+
+          if (!productData || !colorVariant) return null;
+
           return (
             <div
               key={index}
@@ -50,7 +58,7 @@ const Cart = () => {
               <div className="flex items-start gap-6">
                 <img
                   className="w-16 sm:w-20"
-                  src={productData.image[0]}
+                  src={colorVariant.images[0]}
                   alt=""
                 />
                 <div>
@@ -65,6 +73,14 @@ const Cart = () => {
                     <p className="px-2 sm:px-3 sm:py-1 border bg-slate-50">
                       {item.size}
                     </p>
+                    {/* <p className="px-2 sm:px-3 sm:py-1 border bg-slate-50">
+                      {item.color}
+                    </p> */}
+                    <div 
+                      className="w-4 h-4 rounded-full border border-gray-300"
+                      style={{ backgroundColor: item.color }}
+                      aria-label={`${item.color} color`}
+                    />
                   </div>
                 </div>
               </div>
@@ -75,7 +91,8 @@ const Cart = () => {
                     : updateQuantity(
                         item._id,
                         item.size,
-                        Number(e.target.value)
+                        Number(e.target.value),
+                        item.color
                       )
                 }
                 className="border max-w-10 sm:max-w-20 px-1 sm:px-2 py-1"
@@ -84,7 +101,7 @@ const Cart = () => {
                 value={item.quantity}
               />
               <img
-                onClick={() => updateQuantity(item._id, item.size, 0)}
+                onClick={() => updateQuantity(item._id, item.size, 0, item.color)}
                 className="w-4 mr-4 sm:w-5 cursor-pointer"
                 src={assets.bin_icon}
                 alt=""

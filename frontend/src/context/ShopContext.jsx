@@ -18,35 +18,34 @@ const ShopContextProvider = (props) => {
     const [token, setToken] = useState('');
     const navigate = useNavigate();
 
-    const addToCart = async (itemId, size) => {
+    const addToCart = async (itemId, size, color) => {
 
-        if (!size){
-            toast.error('Select Product Size');
-            return ;
+        if (!size || !color) {
+            toast.error('Select Product Size and Color');
+            return;
         }
 
-        let cartData = structuredClone(cartItems); // Clone the cartItems object
-
-        if (cartData[itemId]){
-            if (cartData[itemId][size]) {
-                cartData[itemId][size]++;
-            } else {
-                cartData[itemId][size] = 1;
-            }
-        } else {
+        let cartData = structuredClone(cartItems);
+        
+        if (!cartData[itemId]) {
             cartData[itemId] = {};
-            cartData[itemId][size] = 1;
         }
+        if (!cartData[itemId][color]) {
+            cartData[itemId][color] = {};
+        }
+        cartData[itemId][color][size] = (cartData[itemId][color][size] || 0) + 1;
+        
         setCartItems(cartData);
 
         if (token) {
             try {
-                
-                await axios.post(backendUrl + '/api/cart/add', {itemId, size}, {headers: {token}});
-
+                await axios.post(backendUrl + '/api/cart/add', 
+                    { itemId, size, color }, 
+                    { headers: { token } }
+                );
             } catch (error) {
                 console.log(error);
-                toast.error(error.message)
+                toast.error(error.message);
             }
         }
     }
@@ -56,58 +55,44 @@ const ShopContextProvider = (props) => {
     // }, [cartItems])
 
     const getCartCount = () => {
-        let totalCount = 0;
-        for(const items in cartItems){
-            for(const item in cartItems[items]){
-                try {
-                    if (cartItems[items][item]) {
-                        totalCount += cartItems[items][item];
-                    }
-                } catch (error) {
-                    
-                }
-            }
-        }
-        return totalCount;
+        return Object.entries(cartItems).reduce((total, [_, colors]) => {
+            return total + Object.entries(colors).reduce((colorTotal, [_, sizes]) => {
+                return colorTotal + Object.values(sizes).reduce((sizeTotal, quantity) => sizeTotal + quantity, 0);
+            }, 0);
+        }, 0);
     }
     
-    const updateQuantity = async (itemId, size, quantity) => {
+    const updateQuantity = async (itemId, size, quantity, color) => {
         
         let cartData = structuredClone(cartItems);
-
-        cartData[itemId][size] = quantity;
-
+        cartData[itemId][color][size] = quantity;
         setCartItems(cartData);
 
         if (token) {
             try {
-                
-                await axios.post(backendUrl + '/api/cart/update', {itemId, size, quantity}, {headers: {token}});
-
+                await axios.post(backendUrl + '/api/cart/update', 
+                    { itemId, size, color, quantity }, 
+                    { headers: { token } }
+                );
             } catch (error) {
                 console.log(error);
-                toast.error(error.message)
+                toast.error(error.message);
             }
         }
 
     }
 
     const getCartAmount = () => {
-        let totalAmount = 0;
+        return Object.entries(cartItems).reduce((total, [itemId, colors]) => {
+            const itemInfo = products.find(product => product._id === itemId);
+            if (!itemInfo) return total;
 
-        for(const items in cartItems){
-            let itemInfo = products.find((product) => product._id === items);
-            for(const item in cartItems[items]){
-                try {
-                    if (cartItems[items][item] > 0) {
-                        totalAmount += cartItems[items][item] * itemInfo.price;
-                    }
-                } catch (error) {
-                    
-                }
-            }
-        }
-        return totalAmount;
+            return total + Object.values(colors).reduce((colorTotal, sizes) => {
+                return colorTotal + Object.values(sizes).reduce((sizeTotal, quantity) => {
+                    return sizeTotal + (quantity * itemInfo.price);
+                }, 0);
+            }, 0);
+        }, 0);
     }
 
     const getProductsData = async () => {

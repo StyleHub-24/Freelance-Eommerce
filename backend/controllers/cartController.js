@@ -1,29 +1,29 @@
 import userModel from "../models/userModel.js"
 
-
 // add products to user cart
 const addToCart = async (req, res) => {
     try {
-        
-        const { userId, itemId, size } = req.body
+        const { userId, itemId, color, size } = req.body
 
         const userData = await userModel.findById(userId)
         let cartData = await userData.cartData;
 
         if (cartData[itemId]) {
-            if (cartData[itemId][size]) {
-                cartData[itemId][size]++;
+            if (cartData[itemId][color]) {
+                if (cartData[itemId][color][size]) {
+                    cartData[itemId][color][size]++;
+                } else {
+                    cartData[itemId][color][size] = 1;
+                }
             } else {
-                cartData[itemId][size] = 1;
+                cartData[itemId][color] = { [size]: 1 };
             }
         } else {
-            cartData[itemId] = {};
-            cartData[itemId][size] = 1;
+            cartData[itemId] = { [color]: { [size]: 1 } };
         }
 
-        await userModel.findByIdAndUpdate(userId, {cartData})
-
-        res.json({success: true, message: "Product added to cart successfully!"})
+        await userModel.findByIdAndUpdate(userId, { cartData })
+        res.json({ success: true, message: "Product added to cart successfully!" })
 
     } catch (error) {
         console.log(error);
@@ -34,17 +34,18 @@ const addToCart = async (req, res) => {
 // update user cart
 const updateCart = async (req, res) => {
     try {
-        
-        const { userId, itemId, size, quantity } = req.body
+        const { userId, itemId, color, size, quantity } = req.body
 
         const userData = await userModel.findById(userId)
         let cartData = await userData.cartData;
 
-        cartData[itemId][size] = quantity;
+        if (!cartData[itemId] || !cartData[itemId][color]) {
+            throw new Error("Product not found in cart")
+        }
 
-        await userModel.findByIdAndUpdate(userId, {cartData})
-
-        res.json({success: true, message: "Cart updated successfully!"})
+        cartData[itemId][color][size] = quantity;
+        await userModel.findByIdAndUpdate(userId, { cartData })
+        res.json({ success: true, message: "Cart updated successfully!" })
 
     } catch (error) {
         console.log(error);

@@ -41,10 +41,12 @@ const PlaceOrder = () => {
       order_id: order.id,
       receipt: order.receipt,
       handler: async (response) => {
-        console.log(response);
         try {
-          
-          const { data } = await axios.post(backendUrl + '/api/order/verifyRazorpay', response, {headers: {token}});
+          const { data } = await axios.post(
+            backendUrl + '/api/order/verifyRazorpay', 
+            response, 
+            {headers: {token}}
+          );
           if (data.success) {
             toast.success(data.message)
             navigate('/orders')
@@ -53,6 +55,24 @@ const PlaceOrder = () => {
         } catch (error) {
           console.log(error);
           toast.error(error.message)
+        }
+      },
+      modal: {
+        ondismiss: async () => {
+          // Handle payment modal dismissal
+          try {
+            const { data } = await axios.post(
+              backendUrl + '/api/order/cancelRazorpay',
+              { orderId: order.receipt },
+              { headers: { token } }
+            );
+            if (data.success) {
+              toast.info('Payment cancelled');
+            }
+          } catch (error) {
+            console.log(error);
+            toast.error('Error handling payment cancellation');
+          }
         }
       }
     }
@@ -66,14 +86,29 @@ const PlaceOrder = () => {
       
       let orderItems = []
 
-      for(const items in cartItems){ 
-        for(const item in cartItems[items]){
-          if (cartItems[items][item] > 0) {
-            const itemInfo = structuredClone(products.find(product => product._id === items));
-            if (itemInfo) {
-              itemInfo.size = item
-              itemInfo.quantity = cartItems[items][item]
-              orderItems.push(itemInfo)
+      for(const productId in cartItems) {
+        for(const color in cartItems[productId]) {
+          for(const size in cartItems[productId][color]) {
+            if (cartItems[productId][color][size] > 0) {
+              const product = products.find(p => p._id === productId);
+              const colorVariant = product?.colorVariants.find(v => v.color === color);
+              
+              if (product && colorVariant) {
+                orderItems.push({
+                  _id: product._id,
+                  name: product.name,
+                  description: product.description,
+                  price: product.price,
+                  image: colorVariant.images,
+                  category: product.category,
+                  subCategory: product.subCategory,
+                  bestseller: product.bestseller,
+                  date: product.date,
+                  color: color,
+                  size: size,
+                  quantity: cartItems[productId][color][size],
+                });
+              }
             }
           }
         }

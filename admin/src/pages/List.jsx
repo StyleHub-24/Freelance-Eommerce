@@ -72,7 +72,7 @@ const List = ({ token }) => {
       className="grid grid-cols-[auto_1fr_auto_auto] md:grid-cols-[1fr_2fr_1fr_1fr_1fr] lg:grid-cols-[1fr_3fr_1fr_1fr_1fr] items-center gap-3 py-2 px-3 border text-sm sm:text-base"
       key={index}
     >
-      <img className="w-12 sm:w-16 md:w-20 h-auto" src={item.image[0]} alt={item.name} />
+      <img className="w-12 sm:w-16 md:w-20 h-auto" src={item.colorVariants[0]?.images[0]} alt={item.name} />
       <p className="truncate">{item.name}</p>
       <p className="hidden md:block">{item.category}</p>
       <p className="text-sm sm:text-base">

@@ -1,5 +1,6 @@
 import orderModel from "../models/orderModel.js"
 import userModel from "../models/userModel.js"
+import productModel from "../models/productModel.js"
 import Stripe from "stripe";
 import razorpay from "razorpay";
 // Global variables
@@ -13,12 +14,56 @@ const razorpayInstance = new razorpay({
     key_secret: process.env.RAZORPAY_KEY_SECRET
 }) 
 
+const updateProductStock = async (items, increase = false) => {
+    for (const item of items) {
+        const product = await productModel.findById(item._id);
+        const colorVariant = product.colorVariants.find(v => v.color === item.color);
+        
+        if (!colorVariant) continue;
+        
+        const newStock = increase ? 
+            colorVariant.stock + item.quantity :
+            colorVariant.stock - item.quantity;
+            
+        if (!increase && newStock < 0) {
+            throw new Error(`Insufficient stock for ${product.name} in ${item.color}`);
+        }
+        
+        await productModel.updateOne(
+            { 
+                _id: item._id,
+                'colorVariants.color': item.color 
+            },
+            { 
+                $set: { 'colorVariants.$.stock': newStock }
+            }
+        );
+    }
+}
+
+const checkStockAvailability = async (items) => {
+    for (const item of items) {
+        const product = await productModel.findById(item._id);
+        const colorVariant = product.colorVariants.find(v => v.color === item.color);
+        
+        if (!colorVariant || colorVariant.stock < item.quantity) {
+            throw new Error(`Insufficient stock for ${product.name} in ${item.color}`);
+        }
+    }
+}
+
 // Placing orders using COD Method
 const placeOrder = async (req, res) => {
 
     try {
         
         const { userId, items, amount, address } = req.body
+
+        // Check stock availabilit
+        await checkStockAvailability(items);
+        
+        // Update stock
+        await updateProductStock(items, false);
 
         const orderData = {
             userId,
@@ -52,6 +97,9 @@ const placeOrderStripe = async (req, res) => {
         
         const { userId, items, amount, address } = req.body
         const { origin } = req.headers // to get the origin url
+
+        // Check stock availability
+        await checkStockAvailability(items);
 
         const orderData = {
             userId,
@@ -113,6 +161,11 @@ const verifyStripe = async (req, res) => {
     try {
         
         if (success === "true") {
+
+            const order = await orderModel.findById(orderId);
+            // Update stock only after successful payment
+            await updateProductStock(order.items, false);
+
             await orderModel.findByIdAndUpdate(orderId, {payment: true})
             await userModel.findByIdAndUpdate(userId, {cartData: {}})
             res.json({success: true, message: "Order placed successfully & Payment successful!"})
@@ -133,6 +186,9 @@ const placeOrderRazorpay = async (req, res) => {
     try {
         
         const { userId, items, amount, address } = req.body
+
+        // Check stock availability
+        await checkStockAvailability(items);
 
         const orderData = {
             userId,
@@ -177,10 +233,16 @@ const verifyRazorpay = async (req, res) => {
         const orderInfo = await razorpayInstance.orders.fetch(razorpay_order_id)
         // console.log(orderInfo);
         if (orderInfo.status === 'paid') {
+
+            const order = await orderModel.findById(orderInfo.receipt);
+            // Update stock only after successful payment
+            await updateProductStock(order.items, false);
+
             await orderModel.findByIdAndUpdate(orderInfo.receipt, {payment: true})
             await userModel.findByIdAndUpdate(userId, {cartData: {}})
             res.json({success: true, message: "Order placed successfully & Payment successful!"})
         } else {
+            await orderModel.findByIdAndDelete(orderInfo.receipt);
             res.json({success: false, message: "Order placed failed cause payment failed!"})
         }
 
@@ -190,6 +252,27 @@ const verifyRazorpay = async (req, res) => {
         res.json({ success: false, message: error.message })
     }
 }
+
+const cancelRazorpay = async (req, res) => {
+    try {
+      const { orderId } = req.body;
+      
+      // Find and delete the unpaid order
+      await orderModel.findByIdAndDelete(orderId);
+      
+      res.json({ 
+        success: true, 
+        message: "Order cancelled due to payment abandonment" 
+      });
+      
+    } catch (error) {
+      console.log(error);
+      res.json({ 
+        success: false, 
+        message: error.message 
+      });
+    }
+  };
 
 // All orders data for admin panel
 const allOrders = async (req, res) => {
@@ -258,6 +341,9 @@ const cancelOrder = async (req, res) => {
           message: "Order cannot be canceled after processing!",
         });
       }
+
+       // Restore stock
+       await updateProductStock(order.items, true);
   
       // Cancel the order
       await orderModel.findByIdAndUpdate(orderId, {
@@ -335,4 +421,4 @@ const updateEstimatedDelivery = async (req, res) => {
   
   
 
-export { placeOrder, placeOrderStripe, placeOrderRazorpay, allOrders, userOrders, updateStatus, verifyStripe, verifyRazorpay, cancelOrder, updateRefundStatus, updateEstimatedDelivery }
+export { placeOrder, placeOrderStripe, placeOrderRazorpay, allOrders, userOrders, updateStatus, verifyStripe, verifyRazorpay, cancelOrder, updateRefundStatus, updateEstimatedDelivery, cancelRazorpay }

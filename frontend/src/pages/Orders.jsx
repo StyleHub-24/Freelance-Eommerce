@@ -37,6 +37,7 @@ const Orders = () => {
             item["orderId"] = order._id;
             item["refunded"] = order.refunded;
             item["estimatedDelivery"] = order.estimatedDelivery;
+            item["amount"] = order.amount;
             allOrdersItem.push(item);
           });
         });
@@ -64,6 +65,11 @@ const Orders = () => {
       toast.error("Something went wrong!"); // Error toast
       console.error(error);
     }
+  };
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    toast.success('Copied to clipboard!');
   };
 
   useEffect(() => {
@@ -94,14 +100,29 @@ const Orders = () => {
               <img className="w-16 sm:w-20" src={item.image[0]} alt="" />
               <div>
                 <p className="sm:text-base font-medium">{item.name}</p>
-                <div className="flex items-center gap-3 mt-1 text-base text-gray-700">
+                <div className="flex flex-wrap items-center gap-3 mt-1 text-base text-gray-700">
                   <p>
                     {currency}
-                    {item.price}
+                    {item.amount}
                   </p>
                   <p>Quantity: {item.quantity}</p>
-                  <p>Size: {item.size}</p>
+                  <p className="px-2 py-1 border bg-slate-50 text-sm">
+                    Size: {item.size}
+                  </p>
+                  <p className="px-2 py-1 border bg-slate-50 text-sm">
+                    Color: {item.color}
+                  </p>
                 </div>
+                <div className="mt-2 space-y-1 text-sm">
+                <p className="text-gray-600">
+    OrderID #: {item.orderId.slice(-6)} {/* Show last 6 characters */}
+    <button 
+      onClick={() => copyToClipboard(item.orderId)}
+      className="ml-2 text-blue-500 hover:text-blue-600"
+    >
+      Copy full ID
+    </button>
+  </p>
                 <p className="mt-1">
                   Ordered Date:{" "}
                   <span className="text-gray-400">
@@ -122,9 +143,10 @@ const Orders = () => {
                 {item.refunded && item.paymentMethod !== "COD" && (
                   <p className="text-sm text-green-500 mt-2">Amount refunded</p>
                 )}
+                </div>
               </div>
             </div>
-            <div className="md:w-1/2 flex justify-between">
+            <div className="md:w-1/2 flex justify-between items-center">
               <div className="flex items-center gap-2">
                 <p
                   className={`min-w-2 h-2 rounded-full ${item.status === "Canceled" ? "bg-red-500" : "bg-green-500"
@@ -141,7 +163,7 @@ const Orders = () => {
                 </button>
               ) : (
                 item.status !== "Canceled" && (
-                  <>
+                  <div className="space-x-2">
                     <button
                       onClick={() => cancelOrder(item.orderId)}
                       className="border px-4 py-2 text-sm text-red-500 font-medium rounded-sm"
@@ -154,7 +176,7 @@ const Orders = () => {
                     >
                       Track Order
                     </button>
-                  </>
+                  </div>
                 )
               )}
             </div>

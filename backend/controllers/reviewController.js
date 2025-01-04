@@ -20,7 +20,7 @@ const addReview = async (req, res) => {
         const reviewData = {
             productId: productId,
             userId: user._id,
-            userName: user.name, // Include the user's name
+            // userName: user.name, // Include the user's name
             rating: Number(rating),
             content,
             date: Date.now()
@@ -40,7 +40,7 @@ const addReview = async (req, res) => {
 const listReviews = async (req, res) => {
     try {
         const { productId } = req.params;
-        const reviews = await reviewModel.find({ productId }).populate('userId', 'name'); // Populate user details from userId
+        const reviews = await reviewModel.find({ productId }).populate('userId', 'name profilePicture'); // Populate user details from userId
         res.json({ success: true, reviews });
     } catch (error) {
         console.log(error);

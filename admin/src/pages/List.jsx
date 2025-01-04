@@ -44,7 +44,6 @@ const List = ({ token }) => {
   }
   
   const handeleditProduct=(id)=>{
-    console.log(id);
     navigate(`/updateProduct/${id}`); 
     
   }

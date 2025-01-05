@@ -3,6 +3,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { ShopContext } from '../context/ShopContext';
 import { Loader2, User } from 'lucide-react';
+import defaultImage from '../assets/default_profile.jpg'
 
 const UserProfile = ({ token }) => {
   const [formData, setFormData] = useState({
@@ -55,7 +56,9 @@ const UserProfile = ({ token }) => {
             country: ''
           }
         });
-        setProfilePicture(user.profilePicture || null);
+        console.log(user.profilePicture)
+        user.profilePicture==='defaultImage'?setProfilePicture(defaultImage):setProfilePicture(user.profilePicture);
+        // setProfilePicture(user.profilePicture || null);
       } else {
         toast.error('Failed to fetch user profile');
       }

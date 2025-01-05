@@ -6,7 +6,7 @@ const migrateUserFields = async () => {
       {
         $or: [
           { phoneNumber: { $exists: false } },
-          { profilePicture: { $exists: false } },
+          { profilePicture: { $exists: false }},
           { gender: { $exists: false } },
           { address: { $exists: false } },
           { bio: { $exists: false } },
@@ -15,7 +15,7 @@ const migrateUserFields = async () => {
       {
         $set: {
           phoneNumber: "",  
-          profilePicture: "default-image-url",  
+          profilePicture: "defaultImage",  
           gender: "other",  
           address: {},  
           bio: "",  

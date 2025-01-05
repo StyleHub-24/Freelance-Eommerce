@@ -2,20 +2,30 @@ import React, { useContext, useEffect, useState } from 'react'
 import { ShopContext } from '../context/ShopContext'
 import Title from './Title'
 import ProductItem from './ProductItem'
+
+const Loader = () => {
+  return (
+    <div className="animate-pulse flex flex-col items-center space-y-4">
+      <div className="w-full h-40 bg-gray-300 rounded-md"></div>
+      <div className="w-3/4 h-4 bg-gray-300 rounded-md"></div>
+      <div className="w-1/2 h-4 bg-gray-300 rounded-md"></div>
+    </div>
+  );
+};
+
 const BestSeller = () => {
 
     const {products} = useContext(ShopContext);
 
-    // console.log(products);
-    
-
     const [bestSeller,setBestSeller] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-      const bestProduct = products.filter((item) => (item.bestseller));
-      // console.log(bestProduct);
-      
-      setBestSeller(bestProduct.slice(0,5))
+      if (products.length > 0) {
+        const bestProduct = products.filter((item) => (item.bestseller));
+        setBestSeller(bestProduct.slice(0,5))
+        setLoading(false);
+      }
     }, [products])
     
   return (
@@ -28,11 +38,13 @@ const BestSeller = () => {
         </div>
 
         <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 gap-y-6'>
-          {
+          {loading ? (
+            Array.from({ length: 10 }).map((_, index) => <Loader key={index} />)
+          ) : (
             bestSeller.map((item,index) => (
               <ProductItem key={index} id={item._id} name={item.name} price={item.price} colorVariants={item.colorVariants} bestseller={item.bestseller}/>
             ))
-          }
+          )}
         </div>
 
     </div>

@@ -22,7 +22,7 @@ const SearchBar = () => {
     useEffect(() => {
         // Show the search bar only on Home and Collection pages
         const currentPath = location.pathname;
-        setVisible(currentPath === '/' || currentPath.includes('collection'));
+        setVisible(currentPath.includes('collection'));
       }, [location]);
     
 

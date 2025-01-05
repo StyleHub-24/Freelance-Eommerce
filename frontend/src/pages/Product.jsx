@@ -16,6 +16,7 @@ const Product = () => {
   const [size, setSize] = useState('');
   const [activeTab, setActiveTab] = useState('description'); // Active tab state
   const [selectedColor, setSelectedColor] = useState(null);
+  const [loading, setLoading] = useState(true); // Set initial loading state to true
 
   // Function to determine if a color is light or dark
   const isLightColor = (color) => {
@@ -25,12 +26,14 @@ const Product = () => {
   }
 
   const fetchProductData = () => {
+    setLoading(true);
     const product = products.find(item => item._id === productId);
     if (product) {
       setProductData(product);
       setSelectedColor(product.colorVariants[0]);
       setImage(product.colorVariants[0].images[0]);
     }
+    setLoading(false);
   }
 
   useEffect(() => {
@@ -46,7 +49,15 @@ const Product = () => {
 
   const isOutOfStock = selectedColor?.stock === 0;
 
-  return productData ? (
+  return loading ? (
+    <div className="flex flex-col gap-2">
+      <div className="w-full h-64 bg-gray-200 animate-pulse mb-4"></div>
+      <div className="w-full h-10 bg-gray-200 animate-pulse mb-2"></div>
+      <div className="w-full h-6 bg-gray-200 animate-pulse mb-2"></div>
+      <div className="w-full h-6 bg-gray-200 animate-pulse mb-2"></div>
+      <div className="w-full h-6 bg-gray-200 animate-pulse mb-2"></div>
+    </div>
+  ) : productData ? (
     <div className='border-t-2 pt-10 transition-opacity ease-in duration-500 opacity-100'>
       {/* product data */}
       <div className='flex gap-12 sm:gap-12 flex-col sm:flex-row'>

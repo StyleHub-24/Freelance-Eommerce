@@ -13,6 +13,7 @@ const ProductReviews = ({ productId, subCategory }) => {
   const [showPopup, setShowPopup] = useState(false);
   const [selectedReviewId, setSelectedReviewId] = useState(null);
   const [suggestedReviews, setSuggestedReviews] = useState([]);
+  const [loading, setLoading] = useState(true); // Set initial loading state to true
 
   // const suggestedReviews = [
   //   "Amazing quality!",
@@ -113,6 +114,7 @@ const ProductReviews = ({ productId, subCategory }) => {
   };
 
   const fetchReviews = async () => {
+    setLoading(true);
     try {
       const response = await fetch(`${backendUrl}/api/review/${productId}`);
       const result = await response.json();
@@ -123,6 +125,8 @@ const ProductReviews = ({ productId, subCategory }) => {
       }
     } catch (error) {
       console.error('Error fetching reviews:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -204,48 +208,74 @@ const ProductReviews = ({ productId, subCategory }) => {
       </form>
 
       {/* Reviews List */}
-      <div className="space-y-6">
-        {reviews.map((review) => (
-          <div key={review._id} className="border-b border-gray-200 pb-6">
-            <div className="flex justify-between items-start mb-2">
-              <div className="flex items-center">
-                {/* User's Profile Picture */}
-                <img
-                  src={review.userId.profilePicture || 'default-image-url'}  // Provide a default image URL if profile picture is not available
-                  alt={`${review.userId.name}'s profile`}
-                  className="w-8 h-8 rounded-full object-cover mr-3"  // Circular image
-                />
-                <div>
-                  <h3 className="font-semibold">{review.userId.name}</h3>
-                  {/* Stars below the name and profile picture */}
-                  <div className="flex items-center mt-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`w-4 h-4 ${i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
-                      />
-                    ))}
+      {loading ? (
+        <div className="space-y-6">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <div key={index} className="border-b border-gray-200 pb-6">
+              <div className="flex justify-between items-start mb-2">
+                <div className="flex items-center">
+                  <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse mr-3"></div>
+                  <div>
+                    <div className="w-24 h-4 bg-gray-200 animate-pulse mb-1"></div>
+                    <div className="flex items-center mt-1">
+                      {Array.from({ length: 5 }).map((_, starIndex) => (
+                        <div key={starIndex} className="w-4 h-4 bg-gray-200 animate-pulse mr-1"></div>
+                      ))}
+                    </div>
                   </div>
                 </div>
+                <div className="flex flex-col items-center">
+                  <div className="w-16 h-4 bg-gray-200 animate-pulse mb-1"></div>
+                  <div className="w-6 h-6 bg-gray-200 rounded-full animate-pulse mt-2"></div>
+                </div>
               </div>
-              <div className="flex flex-col items-center">
-                <div className="text-sm text-gray-500">{new Date(review.date).toLocaleDateString()}</div>
-                {decoded && decoded === review.userId._id && (
-                  <div
-                    className="text-sm flex items-center justify-center h-6 w-6 bg-gray-200 rounded-full text-gray-500 cursor-pointer mt-2"
-                    onClick={() => { setSelectedReviewId(review._id); setShowPopup(true); }}
-                  >
-                    X
-                  </div>
-                )}
-              </div>
+              <div className="w-full h-6 bg-gray-200 animate-pulse mt-2"></div>
             </div>
-            {/* Review content */}
-            <p className="text-gray-600 mt-2 max-w-full overflow-scroll">{review.content}</p> {/* Ensure content stays within boundaries */}
-          </div>
-        ))}
-      </div>
-
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {reviews.map((review) => (
+            <div key={review._id} className="border-b border-gray-200 pb-6">
+              <div className="flex justify-between items-start mb-2">
+                <div className="flex items-center">
+                  {/* User's Profile Picture */}
+                  <img
+                    src={review.userId.profilePicture || 'default-image-url'}  // Provide a default image URL if profile picture is not available
+                    alt={`${review.userId.name}'s profile`}
+                    className="w-8 h-8 rounded-full object-cover mr-3"  // Circular image
+                  />
+                  <div>
+                    <h3 className="font-semibold">{review.userId.name}</h3>
+                    {/* Stars below the name and profile picture */}
+                    <div className="flex items-center mt-1">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-4 h-4 ${i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex flex-col items-center">
+                  <div className="text-sm text-gray-500">{new Date(review.date).toLocaleDateString()}</div>
+                  {decoded && decoded === review.userId._id && (
+                    <div
+                      className="text-sm flex items-center justify-center h-6 w-6 bg-gray-200 rounded-full text-gray-500 cursor-pointer mt-2"
+                      onClick={() => { setSelectedReviewId(review._id); setShowPopup(true); }}
+                    >
+                      X
+                    </div>
+                  )}
+                </div>
+              </div>
+              {/* Review content */}
+              <p className="text-gray-600 mt-2 max-w-full overflow-scroll">{review.content}</p> {/* Ensure content stays within boundaries */}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

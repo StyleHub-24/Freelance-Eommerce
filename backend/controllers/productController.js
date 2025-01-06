@@ -1,5 +1,6 @@
 import { v2 as cloudinary } from 'cloudinary';
 import productModel from '../models/productModel.js';
+import reviewModel from '../models/reviewModel.js';
 
 // function for add product
 const addProduct = async (req, res) => {
@@ -101,14 +102,19 @@ const removeProduct = async (req, res) => {
             return lastPart.split('.')[0];
         });
 
-        await Promise.all(
-            publicIds.map(async (publicId) => {
+        
+        await Promise.all([
+            // Delete images from cloudinary
+            ...publicIds.map(async (publicId) => {
                 await cloudinary.uploader.destroy(publicId);
-            })
-        );
+            }),
+            // Delete all reviews associated with this product
+            reviewModel.deleteMany({ productId: id }),
+            // Delete the product
+            productModel.findByIdAndDelete(id)
+        ]);
 
-        await productModel.findByIdAndDelete(id);
-        res.json({ success: true, message: "Product removed successfully!" });
+        res.json({ success: true, message: "Product and associated reviews removed successfully!" });
 
     } catch (error) {
         console.log(error);

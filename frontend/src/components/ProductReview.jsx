@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import { useContext } from 'react';
 import { ShopContext } from '../context/ShopContext';
 import { useNavigate } from 'react-router-dom';
+import { assets } from '../assets/assets';
 
 const ProductReviews = ({ productId, subCategory }) => {
   const [newReview, setNewReview] = useState('');
@@ -211,7 +212,7 @@ const ProductReviews = ({ productId, subCategory }) => {
               <div className="flex items-center">
                 {/* User's Profile Picture */}
                 <img
-                  src={review.userId.profilePicture || 'default-image-url'}  // Provide a default image URL if profile picture is not available
+                  src={review.userId.profilePicture === 'defaultImage' ? assets.defaultProfileImg : review.userId.profilePicture}  // Provide a default image URL if profile picture is not available
                   alt={`${review.userId.name}'s profile`}
                   className="w-8 h-8 rounded-full object-cover mr-3"  // Circular image
                 />

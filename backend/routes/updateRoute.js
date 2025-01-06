@@ -5,6 +5,6 @@ import upload from '../middleware/multer.js';
 const updateRouter = express.Router();
 
 // Update product route
-updateRouter.put('/update', updateProduct);
+updateRouter.put('/update', adminAuth , updateProduct);
 
 export {updateRouter};

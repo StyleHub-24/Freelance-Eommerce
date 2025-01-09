@@ -10,6 +10,7 @@ import orderRouter from "./routes/orderRoute.js";
 import migrateRefundField from "./config/migrateRefundField.js";
 import reviewRouter from "./routes/ReviewRoute.js";
 import {updateRouter} from "./routes/updateRoute.js"
+import { chatbotRouter } from "./routes/chatbotRoute.js";
 
 // App config
 const app = express();
@@ -30,6 +31,7 @@ app.use('/api/cart', cartRouter)
 app.use('/api/order', orderRouter)
 app.use('/api/review', reviewRouter);
 app.use('/api/productUpdate', updateRouter); 
+app.use('/api/chatbot', chatbotRouter); 
 
 app.get('/', (req, res) => {
     res.send('API WORKING');

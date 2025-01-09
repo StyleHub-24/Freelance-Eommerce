@@ -18,6 +18,7 @@ import Verify from './pages/Verify'
 import ResetPassword from './pages/ResetPassword'
 import { ShopContext } from './context/ShopContext'
 import UserProfile from './components/UserProfile'
+import ChatInterface from './components/ChatInterface'
 const App = () => {
 
   const {backendUrl, token} = useContext(ShopContext)
@@ -42,6 +43,7 @@ const App = () => {
         <Route path="/reset-password/:token" element={<ResetPassword backendUrl={backendUrl} />} />
         <Route path='/user-profile' element={<UserProfile token={token}/>} />
       </Routes>
+      {token && <ChatInterface />}
       <Footer/>
     </div>
   )

@@ -155,7 +155,7 @@ const ChatInterface = () => {
                         </div>
 
                         {/* Chat Body */}
-                        <div className="p-4 bg-white h-64 overflow-y-auto">
+                        <div className="p-4 bg-white h-60 overflow-y-auto">
                             {messages.map((msg, index) => (
                                 <div
                                     key={index}
@@ -191,14 +191,31 @@ const ChatInterface = () => {
                                     value={inputMessage}
                                     onChange={(e) => setInputMessage(e.target.value)}
                                     placeholder="Type your message..."
-                                    className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 max-w-[calc(100%-3rem)]"
                                 />
                                 <button
                                     type="submit"
-                                    className="px-6 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="px-3 py-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                                     disabled={!inputMessage.trim() || isTyping}
                                 >
-                                    Send
+                                    <svg
+  className="w-6 h-6 text-gray-800 dark:text-white"
+  aria-hidden="true"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  fill="currentColor"
+  viewBox="0 0 24 24"
+  transform="rotate(90)"
+>
+  <path
+    fill-rule="evenodd"
+    d="M12 2a1 1 0 0 1 .932.638l7 18a1 1 0 0 1-1.326 1.281L13 19.517V13a1 1 0 1 0-2 0v6.517l-5.606 2.402a1 1 0 0 1-1.326-1.281l7-18A1 1 0 0 1 12 2Z"
+    clip-rule="evenodd"
+  />
+</svg>
+
+
                                 </button>
                             </div>
                         </form>

@@ -139,9 +139,9 @@ const ChatInterface = () => {
                         </div>
 
                         {/* Suggested Questions */}
-                        <div className="p-4 bg-gray-50 border-b border-gray-300">
-                            <p className="text-sm text-gray-600 mb-3">Suggested questions:</p>
-                            <div className="flex flex-wrap gap-2">
+                        <div className="px-4 py-0.5 bg-gray-50 border-b border-gray-300">
+                            <p className="text-sm text-gray-600 mb-1.5">Suggested questions:</p>
+                            <div className="flex flex-wrap gap-1">
                                 {chatbotData.map((item, index) => (
                                     <button
                                         key={index}
@@ -159,7 +159,7 @@ const ChatInterface = () => {
                             {messages.map((msg, index) => (
                                 <div
                                     key={index}
-                                    className={`mb-3 flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                                    className={`mb-2 flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                                 >
                                     <div
                                         className={`max-w-[80%] p-3 rounded-lg ${msg.sender === 'user'

@@ -7,8 +7,10 @@ const ChatInterface = () => {
     const [messages, setMessages] = useState([]);
     const [chatbotData, setChatbotData] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
-    const { backendUrl } = useContext(ShopContext);
+    const [inputMessage, setInputMessage] = useState('');
+    const { backendUrl, userData } = useContext(ShopContext);
     const messagesEndRef = useRef(null);
+    const inputRef = useRef(null);
 
     const toggleChat = () => {
         if (!isOpen) {
@@ -20,6 +22,14 @@ const ChatInterface = () => {
         setIsOpen(!isOpen);
     };
 
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        if (inputMessage.trim()) {
+            handleSend(inputMessage);
+            setInputMessage('');
+        }
+    };
+
     const handleSend = (message) => {
         setMessages((prevMessages) => [
             ...prevMessages,
@@ -28,7 +38,7 @@ const ChatInterface = () => {
         setIsLoading(true);
 
         setTimeout(() => {
-            const response = chatbotData.find(item => item.question === message)?.answer || 'I am here to help! Please ask any question.';
+            const response = chatbotData.find(item => item.question.toLowerCase() === message.toLowerCase() || item.question.toUpperCase() === message.toUpperCase() || item.question === message)?.answer || 'I am here to help! Please ask any question.';
             setMessages((prevMessages) => [
                 ...prevMessages,
                 { text: response, sender: 'bot' }
@@ -53,6 +63,13 @@ const ChatInterface = () => {
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
+
+    // Focus input when chat opens
+    useEffect(() => {
+        if (isOpen) {
+            inputRef.current?.focus();
+        }
+    }, [isOpen]);
 
     return (
         <div>
@@ -90,6 +107,9 @@ const ChatInterface = () => {
 
                         {/* Chatbot Questions */}
                         <div className="p-3 bg-gray-50 border-b border-gray-300">
+                        <p className="text-lg font-medium text-gray-700 mb-2">
+                               👋🏼 Hello {userData?.name || 'Guest'}, how can we help?
+                            </p>
                             <div
                                 className={`grid grid-cols-1 sm:grid-cols-2 gap-3 ${
                                     chatbotData.length > 3 ? 'h-32 overflow-y-auto' : ''
@@ -134,6 +154,26 @@ const ChatInterface = () => {
                             )}
                             <div ref={messagesEndRef} />
                         </div>
+                        {/* Input Area */}
+                        <form onSubmit={handleSubmit} className="p-3 bg-gray-50 border-t border-gray-300">
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    ref={inputRef}
+                                    value={inputMessage}
+                                    onChange={(e) => setInputMessage(e.target.value)}
+                                    placeholder="Type your message..."
+                                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                                <button
+                                    type="submit"
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-300"
+                                    disabled={!inputMessage.trim()}
+                                >
+                                    Send
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </>
             )}

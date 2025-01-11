@@ -160,7 +160,8 @@ const UpdateProduct = ({ token }) => {
           {/* Color variants section */}
           {colorVariants.map((variant, variantIndex) => (
             <div key={variantIndex} className="w-full border-b pb-4 mb-4">
-              <div className="flex justify-between items-center mb-3">
+              <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-3'>
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
                 <input
                   required
                   value={variant.color}
@@ -169,7 +170,7 @@ const UpdateProduct = ({ token }) => {
                     updatedVariants[variantIndex].color = e.target.value;
                     setColorVariants(updatedVariants);
                   }}
-                  className="px-3 py-2"
+                  className="px-3 py-2 w-full sm:w-auto"
                   type="text"
                   placeholder="Color name"
                 />
@@ -181,19 +182,20 @@ const UpdateProduct = ({ token }) => {
                     updatedVariants[variantIndex].stock = parseInt(e.target.value) || 0;
                     setColorVariants(updatedVariants);
                   }}
-                  className="px-3 py-2 w-[100px]"
+                  className="px-3 py-2 w-[120px]"
                   type="number"
                   placeholder="Stock"
                   min={0}
                 />
               </div>
+              </div>
 
               {/* Display fetched images */}
-              <div className="flex gap-2 mb-3">
+              <div className="flex flex-wrap gap-2 mb-3">
                 {variant.images.map((image, imageIndex) => (
                   <img
                     key={imageIndex}
-                    className="w-20"
+                    className="w-20 h-20 object-cover"
                     src={image || 'https://via.placeholder.com/80'} // Placeholder for null images
                     alt={`Variant ${variantIndex} Image ${imageIndex + 1}`}
                   />
@@ -201,7 +203,7 @@ const UpdateProduct = ({ token }) => {
               </div>
 
               {/* Size selection */}
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-3">
                 {['S', 'M', 'L', 'XL', 'XXL'].map((size) => (
                   <div
                     key={size}

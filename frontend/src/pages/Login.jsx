@@ -8,7 +8,7 @@ const Login = () => {
 
   const [currentState, setCurrentState] = useState('Login');
   // const [currentState, setCurrentState] = useState('Sign Up');
-  const { token, setToken, navigate, backendUrl } = useContext(ShopContext);
+  const { token, setToken, navigate, backendUrl, getUserCart } = useContext(ShopContext);
 
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
@@ -30,6 +30,8 @@ const Login = () => {
           toast.success("Sign Up Successful!")
           setToken(response.data.token)
           localStorage.setItem('token', response.data.token)
+          // Fetch cart data immediately after successful Sign Up
+          await getUserCart(response.data.token)
         } else {
           toast.error(response.data.message)
         }
@@ -42,6 +44,8 @@ const Login = () => {
           toast.success("Login Successful!")
           setToken(response.data.token)
           localStorage.setItem('token', response.data.token)
+          // Fetch cart data immediately after successful login
+          await getUserCart(response.data.token)
         } else {
           toast.error(response.data.message)
         }
@@ -74,7 +78,7 @@ const Login = () => {
   useEffect(() => {
     if (token) {
       navigate('/')
-      window.location.reload(); // Force page refresh
+      // window.location.reload(); // Force page refresh
     }
   }, [token])
 

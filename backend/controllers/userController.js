@@ -130,11 +130,70 @@ const forgotPassword = async (req, res) => {
 
         const resetLink = `${process.env.FRONTEND_URL}/reset-password/${token}`;
 
+        // Simplified HTML email template
+        const htmlTemplate = `
+        <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+        <html xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        </head>
+        <body style="margin: 0; padding: 0;">
+            <div style="background-color: #f9f9f9; padding: 20px; font-family: Arial, sans-serif;">
+                <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <div style="text-align: center; padding: 20px; background-color: #4a90e2; color: white; border-radius: 5px;">
+                        <h1 style="margin: 0;">Password Reset Request</h1>
+                    </div>
+                    
+                    <div style="padding: 20px; color: #333333;">
+                        <p>Hello ${user.name},</p>
+                        <p>We received a request to reset your password. If you didn't make this request, you can safely ignore this email.</p>
+                        <p>To reset your password, please click the link below:</p>
+                        
+                        <!-- Simple text link instead of a button -->
+                        <p style="text-align: center; margin: 30px 0;">
+                            <a href="${resetLink}" 
+                               style="background-color: #4a90e2; 
+                                      color: #ffffff; 
+                                      text-decoration: none; 
+                                      padding: 12px 30px; 
+                                      border-radius: 5px; 
+                                      font-weight: bold; 
+                                      display: inline-block;">
+                                Reset Your Password
+                            </a>
+                        </p>
+
+                        <p style="font-size: 14px; color: #666666;">If the link doesn't work, copy and paste this URL into your browser:</p>
+                        <p style="font-size: 14px; word-break: break-all; color: #4a90e2;">${resetLink}</p>
+                        
+                        <p style="font-size: 14px; color: #666666; margin-top: 30px;">This link will expire in 1 hour for security reasons.</p>
+                    </div>
+                    
+                    <div style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #f0f0f0; color: #666666; font-size: 12px;">
+                        <p>This is an automated email from [StyleHub]. Please do not reply to this email.</p>
+                        <p>&copy; ${new Date().getFullYear()} StyleHub.com All rights reserved.</p>
+                    </div>
+                </div>
+            </div>
+        </body>
+        </html>
+        `;
+
         const mailOptions = {
-            from: process.env.EMAIL_USER,
+            from: {
+                name: 'StyleHub',  
+                address: process.env.EMAIL_USER
+            },
             to: email,
-            subject: 'Password Reset Request',
-            text: `Click the following link to reset your password: ${resetLink}`,
+            subject: 'Reset Your Password',  
+            html: htmlTemplate,
+            text: `Hello ${user.name},\n\nWe received a request to reset your password. To reset your password, click the following link: ${resetLink}\n\nIf you didn't make this request, you can safely ignore this email.\n\nThis link will expire in 1 hour for security reasons.`,
+            headers: {
+                'X-Priority': '1',  // High priority
+                'X-MSMail-Priority': 'High',
+                'Importance': 'High'
+            }
         };
 
         await transporter.sendMail(mailOptions);
@@ -197,58 +256,58 @@ const getUserProfile = async (req, res) => {
 // Function to update user profile
 const updateUserProfile = async (req, res) => {
     try {
-      const { phoneNumber, gender, userId, name, email, bio, address } = req.body;
-      const addressObject = JSON.parse(address); // Parse the stringified address object
-  
-      // First get current user 
-      const currentUser = await userModel.findById(userId);
-      if (!currentUser) {
-        return res.json({ success: false, message: "User not found!" });
-      }
-  
-      let profilePictureUrl = currentUser.profilePicture; // Keep existing profile picture by default
-  
-      // Only handle image upload if a new file is provided
-      if (req.file) {
-        // Delete old image from cloudinary if it exists and isn't the default
-        if (currentUser.profilePicture && currentUser.profilePicture !== "defaultImage") {
-          try {
-            const parts = currentUser.profilePicture.split('/');
-            const lastPart = parts[parts.length - 1];
-            const publicId = lastPart.split('.')[0];
-            await cloudinary.uploader.destroy(publicId);
-          } catch (error) {
-            console.log("Error deleting old image:", error);
-          }
+        const { phoneNumber, gender, userId, name, email, bio, address } = req.body;
+        const addressObject = JSON.parse(address); // Parse the stringified address object
+
+        // First get current user 
+        const currentUser = await userModel.findById(userId);
+        if (!currentUser) {
+            return res.json({ success: false, message: "User not found!" });
         }
-  
-        // Upload new image
-        const result = await cloudinary.uploader.upload(req.file.path, { resource_type: "image" });
-        profilePictureUrl = result.secure_url;
-      }
-  
-      const updatedUser = await userModel.findByIdAndUpdate(
-        userId,
-        {
-          $set: {
-            name,
-            email,
-            phoneNumber: phoneNumber || "",
-            gender: gender || "other",
-            profilePicture: profilePictureUrl, // Use either new uploaded image URL or keep existing one
-            bio: bio || "",
-            address: addressObject
-          }
-        },
-        { new: true }
-      );
-  
-      res.json({ success: true, message: "Profile updated successfully!", updatedUser });
+
+        let profilePictureUrl = currentUser.profilePicture; // Keep existing profile picture by default
+
+        // Only handle image upload if a new file is provided
+        if (req.file) {
+            // Delete old image from cloudinary if it exists and isn't the default
+            if (currentUser.profilePicture && currentUser.profilePicture !== "defaultImage") {
+                try {
+                    const parts = currentUser.profilePicture.split('/');
+                    const lastPart = parts[parts.length - 1];
+                    const publicId = lastPart.split('.')[0];
+                    await cloudinary.uploader.destroy(publicId);
+                } catch (error) {
+                    console.log("Error deleting old image:", error);
+                }
+            }
+
+            // Upload new image
+            const result = await cloudinary.uploader.upload(req.file.path, { resource_type: "image" });
+            profilePictureUrl = result.secure_url;
+        }
+
+        const updatedUser = await userModel.findByIdAndUpdate(
+            userId,
+            {
+                $set: {
+                    name,
+                    email,
+                    phoneNumber: phoneNumber || "",
+                    gender: gender || "other",
+                    profilePicture: profilePictureUrl, // Use either new uploaded image URL or keep existing one
+                    bio: bio || "",
+                    address: addressObject
+                }
+            },
+            { new: true }
+        );
+
+        res.json({ success: true, message: "Profile updated successfully!", updatedUser });
     } catch (error) {
-      console.log(error);
-      res.json({ success: false, message: error.message });
+        console.log(error);
+        res.json({ success: false, message: error.message });
     }
-  };
+};
 
 
 export { loginUser, registerUser, adminLogin, forgotPassword, resetPassword, getUserProfile, updateUserProfile }

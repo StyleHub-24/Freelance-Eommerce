@@ -26,22 +26,23 @@ const updateProduct = async (req, res) => {
         product.price = price ? Number(price) : product.price;
         product.category = category ? category : product.category;
         product.subCategory = subCategory ? subCategory : product.subCategory;
-        product.sizes = sizes ? JSON.parse(sizes) : product.sizes;
+        console.log(product.sizes)
         product.bestseller = typeof bestseller === 'string' 
             ? (bestseller === 'true' ? true : bestseller === 'false' ? false : product.bestseller)
             : product.bestseller;
 
         // Update stock in colorVariants while keeping other properties unchanged
         product.colorVariants = colorVariants && Array.isArray(colorVariants)
-            ? product.colorVariants.map((variant) => {
-                const updatedVariant = colorVariants.find(v => v.color === variant.color);
-                return {
-                    ...variant,
-                    stock: updatedVariant ? updatedVariant.stock : variant.stock,
-                };
-            })
-            : product.colorVariants;
-            
+        ? product.colorVariants.map((variant) => {
+            const updatedVariant = colorVariants.find(v => v.color === variant.color);
+            return {
+                ...variant,
+                stock: updatedVariant ? updatedVariant.stock : variant.stock,
+                sizes: updatedVariant && updatedVariant.sizes ? updatedVariant.sizes : variant.sizes, // Update sizes if provided
+            };
+        })
+        : product.colorVariants;
+    
 
         // Save updated product to the database
         await product.save();

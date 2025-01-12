@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useState } from 'react'
 import { ShopContext } from '../context/ShopContext';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { Loader2, User } from 'lucide-react';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
 const Login = () => {
@@ -14,6 +15,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
   const [showPassword, setShowPassword] = useState(false); // New state
+  const [isLoading, setIsLoading] = useState(false);
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword); // Toggle function
 
@@ -21,6 +23,7 @@ const Login = () => {
 
   const onSubmitHandler = async (event) => {
     event.preventDefault();
+    setIsLoading(true);
     try {
       if (currentState === 'Sign Up') {
         
@@ -37,7 +40,6 @@ const Login = () => {
         }
         
       } else {
-
         const response = await axios.post(backendUrl + '/api/user/login', {email, password})
         // console.log(response.data);
         if (response.data.success) {
@@ -49,11 +51,15 @@ const Login = () => {
         } else {
           toast.error(response.data.message)
         }
+      
       }
 
     } catch (error) {
       console.log(error);
       toast.error(error.message)
+    }
+    finally {
+      setIsLoading(false);
     }
   }
 
@@ -149,7 +155,12 @@ const Login = () => {
           : ( <p onClick={() => setCurrentState('Login')} className="cursor-pointer">Back to Login</p> )
         }
       </div>
-      <button className='bg-black text-white font-light px-8 py-2 mt-4 active:bg-gray-700'>{currentState === 'Login' ? 'Sign In' : currentState === 'Sign Up' ? 'Sign Up' : 'Send Reset Link'}</button>
+      <button 
+      className='bg-black text-white font-light px-8 py-2 mt-4 active:bg-gray-700'
+        disabled={isLoading}>
+        {isLoading ? <Loader2 className='animate-spin w-6 h-6 text-white'/> :(
+        currentState === 'Login' ? 'Sign In' : currentState === 'Sign Up' ? 'Sign Up' : 'Send Reset Link')}
+        </button>
       {/* {(currentState === 'Login' || currentState === 'Sign Up') && (
         <button type="button" class="text-white bg-[#050708] hover:bg-[#050708]/90 focus:ring-4 focus:outline-none focus:ring-[#050708]/50 font-medium rounded-lg text-sm px-20 py-2.5 text-center inline-flex items-center dark:focus:ring-[#050708]/50 dark:hover:bg-[#050708]/30 me-2 mb-2">
         <svg class="w-4 h-4 me-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 18 19">

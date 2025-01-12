@@ -55,8 +55,9 @@ const UpdateProduct = ({ token }) => {
 
   const onSubmitHandler = async (e) => {
     e.preventDefault();
-
+    console.log(colorVariants)
     try {
+      
       const updatedData = {
         id,
         name,
@@ -71,7 +72,7 @@ const UpdateProduct = ({ token }) => {
           stock: variant.stock,
         })),
       };
-      console.log(updatedData.price)
+      console.log(updatedData)
       const response = await axios.put(`${backendUrl}/api/productUpdate/update`, updatedData, {
         headers: { token },
       });
@@ -179,7 +180,7 @@ const UpdateProduct = ({ token }) => {
                   value={variant.stock}
                   onChange={(e) => {
                     const updatedVariants = [...colorVariants];
-                    updatedVariants[variantIndex].stock = parseInt(e.target.value) || 0;
+                    updatedVariants[variantIndex].stock = parseInt(e.target.value);
                     setColorVariants(updatedVariants);
                   }}
                   className="px-3 py-2 w-[120px]"

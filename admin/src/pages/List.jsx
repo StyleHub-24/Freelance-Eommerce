@@ -99,7 +99,7 @@ const List = ({ token }) => {
                 <p className="hidden md:block">{item.category}</p>
                 <p className="text-sm sm:text-base">
                   {currency}
-                  {item.price}
+                  {item.colorVariants[0]?.price}
                 </p>
                 {/* Action Column */}
                 <div className="flex items-center justify-center space-x-2">

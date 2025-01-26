@@ -8,10 +8,9 @@ const addProduct = async (req, res) => {
         const { 
             name, 
             description, 
-            price, 
             category, 
             subCategory, 
-            colorVariants, // This will be an array of {color, sizes, stock} objects
+            colorVariants, // This will be an array of {color, sizes, stock, price} objects
             bestseller 
         } = req.body;
 
@@ -40,7 +39,15 @@ const addProduct = async (req, res) => {
                 return {
                     color: variant.color,
                     images: imagesUrl,
-                    sizes: variant.sizes,
+                    price: parseFloat(variant.price) || 0,
+                    sizes: variant.sizes.map(size => ({
+                        size: size.size,
+                        stock: parseInt(size.stock) || 0,
+                        chestMeasurements: {
+                            inches: size.chestMeasurements.inches,
+                            cm: size.chestMeasurements.cm
+                        }
+                    })),
                     stock: parseInt(variant.stock) || 0  
                 };
             })
@@ -50,7 +57,6 @@ const addProduct = async (req, res) => {
         const productData = {
             name,
             description,
-            price: Number(price),
             category,
             subCategory,
             colorVariants: processedColorVariants,
@@ -138,4 +144,3 @@ const singleProduct = async (req, res) => {
 }
 
 export { listProducts, addProduct, removeProduct, singleProduct }
-

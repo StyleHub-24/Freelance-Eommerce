@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { ShopContext } from '../context/ShopContext';
-import { Loader2, User } from 'lucide-react';
+import { Loader2, User, Pencil } from 'lucide-react';
 import { assets } from '../assets/assets';
 
 const UserProfile = ({ token }) => {
@@ -165,10 +165,10 @@ const UserProfile = ({ token }) => {
             htmlFor="profilePicture" 
             className="cursor-pointer group relative"
           >
-            <div className="w-24 h-24 rounded-full border-2 border-gray-300 overflow-hidden">
+            <div className="relative w-24 h-24 rounded-full overflow-hidden">
               {getProfilePictureUrl() ? (
                 <img
-                  className="w-full h-full object-cover transition-all duration-300 group-hover:opacity-80"
+                  className="w-full h-full object-cover"
                   src={getProfilePictureUrl()}
                   alt="Profile"
                 />
@@ -177,11 +177,9 @@ const UserProfile = ({ token }) => {
                   <User className="w-12 h-12 text-gray-400" />
                 </div>
               )}
-            </div>
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-              <span className="text-sm text-gray-600 bg-white px-2 py-1 rounded shadow">
-                Change Photo
-              </span>
+              <div className="absolute bottom-0 left-0 right-0 bg-black/30 flex items-center justify-center p-1">
+                <Pencil className="w-4 h-4 text-white" />
+              </div>
             </div>
             <input
               type="file"

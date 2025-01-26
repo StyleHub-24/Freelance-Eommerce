@@ -5,6 +5,7 @@ import { assets } from '../assets/assets';
 import RelatedProducts from '../components/RelatedProducts';
 import ProductReviews from '../components/ProductReview';
 import ProductDescription from '../components/ProductDescription';
+import { XCircle } from 'lucide-react';
 
 const Product = () => {
 
@@ -13,10 +14,10 @@ const Product = () => {
   const {products, currency, addToCart} = useContext(ShopContext);
   const [productData, setProductData] = useState(false);
   const [image, setImage] = useState('');
-  const [size, setSize] = useState('');
-  const [activeTab, setActiveTab] = useState('description'); // Active tab state
-  const [selectedColor, setSelectedColor] = useState(null);
-  const [loading, setLoading] = useState(true); // Set initial loading state to true
+  const [activeTab, setActiveTab] = useState('description');
+  const [selectedSize, setSelectedSize] = useState('');
+  const [selectedColorVariant, setSelectedColorVariant] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   // Function to determine if a color is light or dark
   const isLightColor = (color) => {
@@ -30,7 +31,7 @@ const Product = () => {
     const product = products.find(item => item._id === productId);
     if (product) {
       setProductData(product);
-      setSelectedColor(product.colorVariants[0]);
+      setSelectedColorVariant(product.colorVariants[0]);
       setImage(product.colorVariants[0].images[0]);
     }
     setLoading(false);
@@ -42,12 +43,19 @@ const Product = () => {
   }, [productId, products])
   
   const handleColorChange = (colorVariant) => {
-    setSelectedColor(colorVariant);
+    setSelectedColorVariant(colorVariant);
     setImage(colorVariant.images[0]);
-    setSize('');
+    setSelectedSize('');
   }
 
-  const isOutOfStock = selectedColor?.stock === 0;
+  // Calculate if the current selection is out of stock
+  const getCurrentSizeStock = () => {
+    if (!selectedColorVariant || !selectedSize) return 0;
+    const sizeData = selectedColorVariant.sizes.find(s => s.size === selectedSize);
+    return sizeData ? sizeData.stock : 0;
+  }
+
+  const isOutOfStock = !selectedColorVariant || selectedColorVariant.sizes.every(size => size.stock === 0);
 
   return loading ? (
     <div className="flex flex-col gap-2">
@@ -59,12 +67,11 @@ const Product = () => {
     </div>
   ) : productData ? (
     <div className='border-t-2 pt-10 transition-opacity ease-in duration-500 opacity-100'>
-      {/* product data */}
       <div className='flex gap-12 sm:gap-12 flex-col sm:flex-row'>
         {/* product images */}
         <div className='flex-1 flex flex-col-reverse gap-3 sm:flex-row'>
           <div className='flex sm:flex-col overflow-x-auto sm:overflow-y-scroll justify-between sm:justify-normal sm:w-[18.7%] w-full'>
-          {selectedColor?.images.map((item, index) => (
+          {selectedColorVariant?.images.map((item, index) => (
               <img 
                 onClick={() => setImage(item)} 
                 src={item} 
@@ -96,85 +103,109 @@ const Product = () => {
               <img src={assets.star_dull_icon} alt="" className="w-3 5" />
               <p className='pl-2'>(122)</p>
             </div>
-            <p className='mt-5 text-3xl font-medium'>{currency} {productData.price}</p>
-
+            <p className='mt-5 text-3xl font-medium'>{currency} {selectedColorVariant?.price}</p>
             {isOutOfStock && (
             <div className="mt-4 bg-red-50 border border-red-200 rounded-md p-4">
               <p className="text-red-700 font-medium">Currently Out of Stock</p>
-              <p className="text-red-600 text-sm mt-1">This item in {selectedColor?.color} is temporarily unavailable</p>
+              <p className="text-red-600 text-sm mt-1">This item in {selectedColorVariant?.color} is temporarily unavailable</p>
             </div>
           )}
-
             <p className='mt-5 text-gray-500 md:w-4/5'>{productData.description}</p>
-            <div className='flex flex-col gap-4 my-8'>
-          <div className="flex justify-between items-center">
-              <p>Select Color</p>
-              <span className="text-sm text-gray-500">
-                Stock: {selectedColor?.stock || 0} units
-              </span>
+
+            {/* Color Selection */}
+            <div className="mt-6">
+              <p className="text-sm font-medium mb-2">Color: {selectedColorVariant?.color}</p>
+              <div className="flex flex-wrap gap-2">
+                {productData.colorVariants.map((variant, index) => {
+                  const totalStock = variant.sizes.reduce((total, size) => total + size.stock, 0);
+                  return (
+                    <button
+                      key={variant.color}
+                      onClick={() => handleColorChange(variant)}
+                      className={`w-8 h-8 rounded-full transition-all relative ${
+                        variant === selectedColorVariant 
+                          ? 'ring-2 ring-black scale-110' 
+                          : 'ring-1 ring-gray-300'
+                      } ${totalStock === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      style={{ 
+                        backgroundColor: variant.color,
+                        outline: isLightColor(variant.color) ? '1px solid #ddd' : 'none'
+                      }}
+                      disabled={totalStock === 0}
+                      aria-label={`${variant.color}${totalStock === 0 ? ' (Out of Stock)' : ''}`}
+                    >
+                      {totalStock === 0 && (
+                        <XCircle className="absolute -top-2 -right-2 w-4 h-4 text-red-500 bg-white rounded-full" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-            <div className='flex flex-wrap gap-2'>
-              {productData.colorVariants.map((variant, index) => {
-                const isLight = isLightColor(variant.color);
-                const variantOutOfStock = variant.stock === 0;
-                return (
-                  <button 
-                    key={index}
-                    onClick={() => handleColorChange(variant)}
-                    style={{
-                      backgroundColor: variant.color,
-                      color: isLight ? '#000' : '#fff',
-                      border: isLight ? '1px solid #e5e5e5' : 'none',
-                      opacity: variantOutOfStock ? '0.5' : '1'
-                    }}
-                    className={`
-                      w-auto min-w-[80px] h-10 px-3
-                      rounded-md flex items-center justify-center
-                      ${variant.color === selectedColor?.color 
-                        ? 'ring-2 ring-offset-2 ring-orange-500' 
-                        : 'hover:opacity-90'}
-                      transition-all duration-200
-                      text-sm font-medium
-                      ${variantOutOfStock ? 'cursor-not-allowed' : 'cursor-pointer'}
-                    `}
+
+            {/* Size Selection */}
+            <div className="mt-6">
+              <p className="text-sm font-medium mb-2">Size</p>
+              <div className="flex flex-wrap gap-2">
+                {selectedColorVariant?.sizes.map((sizeData) => (
+                  <button
+                    key={sizeData.size}
+                    onClick={() => setSelectedSize(sizeData.size)}
+                    className={`h-10 w-14 flex items-center justify-center border rounded-md text-sm relative ${
+                      selectedSize === sizeData.size
+                        ? 'border-orange-500 bg-gray-100'
+                        : sizeData.stock === 0 
+                        ? 'opacity-40 border-gray-200 bg-white cursor-not-allowed' 
+                        : 'bg-gray-100 hover:bg-gray-200'
+                    }`}
+                    disabled={sizeData.stock === 0}
                   >
-                    {variant.color}
-                    {variantOutOfStock && ' (Out)'}
+                    {sizeData.size}
+                    {sizeData.stock === 0 && (
+                      <XCircle className="absolute -top-2 -right-2 w-4 h-4 text-red-500" />
+                    )}
                   </button>
-                );
-              })}
+                ))}
+              </div>
+              
+              {/* Size Guide */}
+              {selectedSize && (
+                <div className="mt-4 p-4 bg-gray-50 rounded-md">
+                  <p className="text-sm font-medium mb-2">Measurements for size {selectedSize}:</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs text-gray-600">Chest (inches)</p>
+                      <p className="text-sm">{selectedColorVariant?.sizes.find(s => s.size === selectedSize)?.chestMeasurements.inches}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-600">Chest (cm)</p>
+                      <p className="text-sm">{selectedColorVariant?.sizes.find(s => s.size === selectedSize)?.chestMeasurements.cm}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-            <div className='flex flex-col gap-4 my-8'>
-            <p>Select Size</p>
-            <div className='flex gap-2'>
-              {selectedColor?.sizes.map((item, index) => (
-                <button 
-                  onClick={() => setSize(item)} 
-                  className={`border py-2 px-4 
-                    ${item === size ? 'border-orange-500' : ''}
-                    ${isOutOfStock ? 'opacity-50 cursor-not-allowed bg-gray-100' : 'bg-gray-100 hover:bg-gray-200'}`} 
-                  key={index}
-                  disabled={isOutOfStock}
-                >
-                  {item}
-                </button>
-              ))}
-            </div>
-            </div>
-            <button 
-            onClick={() => addToCart(productData._id, size, selectedColor?.color)} 
-            className={`
-              py-3 px-8 text-sm
-              ${isOutOfStock 
-                ? 'bg-gray-400 cursor-not-allowed' 
-                : 'bg-black hover:bg-gray-800 active:bg-gray-700'}
-              text-white
-            `}
-            disabled={isOutOfStock}
-          >
-            {isOutOfStock ? 'OUT OF STOCK' : 'ADD TO CART'}
-          </button>
+
+            {/* Add to Cart Button */}
+            <button
+              onClick={() => {
+                if (selectedSize && selectedColorVariant) {
+                  addToCart(productId, selectedSize, selectedColorVariant.color);
+                }
+              }}
+              className={`mt-6 py-3 px-6 rounded-md text-white font-medium ${
+                !selectedSize || getCurrentSizeStock() === 0
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-black hover:bg-gray-800'
+              }`}
+              disabled={!selectedSize || getCurrentSizeStock() === 0}
+            >
+              {!selectedSize 
+                ? 'Select a Size'
+                : getCurrentSizeStock() === 0
+                ? 'OUT OF STOCK'
+                : 'ADD TO CART'}
+            </button>
             <hr className='mt-8 sm:w-4/5'/>
             <div className='text-sm text-gray-500 mt-5 flex flex-col gap-1'>
                 <p>100% Original Product.</p>
@@ -209,7 +240,7 @@ const Product = () => {
       {/* display related products */}
       <RelatedProducts category={productData.category} subCategory={productData.subCategory} />
     </div>
-  ) : <div className='opacity-0'></div>
+  ) : null;
 }
 
 export default Product

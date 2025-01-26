@@ -14,8 +14,24 @@ const Add = ({ token }) => {
   const [bestseller, setBestseller] = useState(false);
 
   const [colorVariants, setColorVariants] = useState([
-    { color: "", images: [null, null, null, null], sizes: [], stock: "" },
+    { 
+      color: "", 
+      images: [null, null, null, null], 
+      sizes: [], 
+      price: "",
+    },
   ]);
+
+  const [showSizePopup, setShowSizePopup] = useState(false);
+  const [selectedVariantIndex, setSelectedVariantIndex] = useState(null);
+  const [selectedSize, setSelectedSize] = useState(null);
+  const [sizeInfo, setSizeInfo] = useState({
+    stock: "",
+    chestMeasurements: {
+      inches: "",
+      cm: ""
+    }
+  });
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -38,12 +54,72 @@ const Add = ({ token }) => {
   };
 
   const handleSizeToggle = (variantIndex, size) => {
+    setSelectedVariantIndex(variantIndex);
+    setSelectedSize(size);
+    
+    // Check if size info already exists for this size
+    const existingSizeInfo = colorVariants[variantIndex].sizes?.find(s => s.size === size);
+    if (existingSizeInfo) {
+      // If exists, populate the form with existing data
+      setSizeInfo({
+        stock: existingSizeInfo.stock,
+        chestMeasurements: {
+          inches: existingSizeInfo.chestMeasurements.inches,
+          cm: existingSizeInfo.chestMeasurements.cm
+        }
+      });
+    } else {
+      // If it's a new size, reset the form
+      setSizeInfo({
+        stock: "",
+        chestMeasurements: {
+          inches: "",
+          cm: ""
+        }
+      });
+    }
+    
+    setShowSizePopup(true);
+  };
+
+  const handleAddSizeInfo = () => {
+    if (!sizeInfo.stock || !sizeInfo.chestMeasurements.inches || !sizeInfo.chestMeasurements.cm) {
+      toast.error("Please fill all the size information");
+      return;
+    }
+
     const newVariants = [...colorVariants];
-    const sizes = newVariants[variantIndex].sizes;
-    newVariants[variantIndex].sizes = sizes.includes(size)
-      ? sizes.filter((s) => s !== size)
-      : [...sizes, size];
+    const currentSizes = newVariants[selectedVariantIndex].sizes || [];
+    
+    // Add or update size info
+    const sizeExists = currentSizes.findIndex(s => s.size === selectedSize);
+    if (sizeExists !== -1) {
+      currentSizes[sizeExists] = {
+        size: selectedSize,
+        ...sizeInfo
+      };
+    } else {
+      currentSizes.push({
+        size: selectedSize,
+        ...sizeInfo
+      });
+    }
+
+    newVariants[selectedVariantIndex].sizes = currentSizes;
     setColorVariants(newVariants);
+    handleCloseSizePopup();
+  };
+
+  const handleCloseSizePopup = () => {
+    setShowSizePopup(false);
+    setSelectedSize(null);
+    setSizeInfo({
+      stock: "",
+      chestMeasurements: {
+        inches: "",
+        cm: ""
+      }
+    });
   };
 
   const addColorVariant = () => {
@@ -53,7 +129,7 @@ const Add = ({ token }) => {
         color: "",
         images: [null, null, null, null],
         sizes: [],
-        stock: "",
+        price: "",
       },
     ]);
   };
@@ -69,7 +145,6 @@ const Add = ({ token }) => {
       const formData = new FormData();
       formData.append("name", name);
       formData.append("description", description);
-      formData.append("price", price);
       formData.append("category", category);
       formData.append("subCategory", subCategory);
       formData.append("bestseller", bestseller);
@@ -77,8 +152,8 @@ const Add = ({ token }) => {
       // Add color variants data
       const variantsData = colorVariants.map((variant) => ({
         color: variant.color,
+        price: variant.price,
         sizes: variant.sizes,
-        stock: variant.stock,
       }));
       formData.append("colorVariants", JSON.stringify(variantsData));
 
@@ -101,9 +176,13 @@ const Add = ({ token }) => {
         toast.success(response.data.message);
         setName("");
         setDescription("");
-        setPrice("");
         setColorVariants([
-          { color: "", images: [null, null, null, null], sizes: [], stock: "" },
+          { 
+            color: "", 
+            images: [null, null, null, null], 
+            sizes: [], 
+            price: "",
+          },
         ]);
       } else {
         toast.error(response.data.message);
@@ -160,101 +239,163 @@ const Add = ({ token }) => {
           <option value="Bottomwear">Bottomwear</option>
           <option value="Winterwear">Winterwear</option>
         </select>
-        <input
-          required
-          value={price}
-          onChange={(e) => setPrice(e.target.value)}
-          className="px-3 py-2 w-[120px]"
-          type="number"
-          placeholder="Price"
-          min={1}
-        />
       </div>
 
       {/* Color variants section */}
-      {colorVariants.map((variant, variantIndex) => (
-        <div key={variantIndex} className="w-full border-b pb-4 mb-4">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-3">
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
-              <input
-                required
-                value={variant.color}
-                onChange={(e) =>
-                  handleColorChange(variantIndex, e.target.value)
-                }
-                className="px-3 py-2 w-full sm:w-auto"
-                type="text"
-                placeholder="Color name"
-              />
-              <input
-                required
-                value={variant.stock}
-                onChange={(e) =>
-                  handleStockChange(variantIndex, e.target.value)
-                }
-                className="px-3 py-2 w-[120px]"
-                type="number"
-                placeholder="Stock"
-                min={0}
-              />
-            </div>
-            {variantIndex > 0 && (
-              <button
-                type="button"
-                onClick={() => removeColorVariant(variantIndex)}
-                className="text-red-500 w-full sm:w-auto text-left"
-              >
-                Remove Color
-              </button>
-            )}
-          </div>
-
-          {/* Image uploads */}
-          <div className="flex flex-wrap gap-2 mb-3">
-            {variant.images.map((image, imageIndex) => (
-              <label key={imageIndex} className="cursor-pointer">
-                <img
-                  className="w-20 h-20 object-cover"
-                  src={!image ? assets.upload_area : URL.createObjectURL(image)}
-                  alt=""
+      <div className="flex flex-col gap-4 mt-4">
+        {colorVariants.map((variant, variantIndex) => (
+          <div key={variantIndex} className="border p-4 rounded-lg">
+            <div className="flex flex-wrap gap-4 mb-4 items-center justify-between">
+              <div className="flex flex-wrap gap-4">
+                <input
+                  type="text"
+                  placeholder="Color"
+                  value={variant.color}
+                  onChange={(e) => handleColorChange(variantIndex, e.target.value)}
+                  className="border rounded px-2 py-1"
                 />
                 <input
-                  type="file"
-                  hidden
-                  onChange={(e) =>
-                    handleImageChange(
-                      variantIndex,
-                      imageIndex,
-                      e.target.files[0]
-                    )
-                  }
+                  type="number"
+                  placeholder="Price"
+                  value={variant.price}
+                  onChange={(e) => {
+                    const newVariants = [...colorVariants];
+                    newVariants[variantIndex].price = e.target.value;
+                    setColorVariants(newVariants);
+                  }}
+                  className="border rounded px-2 py-1"
                 />
-              </label>
-            ))}
-          </div>
+              </div>
+              
+              {variantIndex > 0 && (
+                <button
+                  type="button"
+                  onClick={() => removeColorVariant(variantIndex)}
+                  className="text-red-500 hover:text-red-700 font-bold w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-50"
+                  title="Remove Color"
+                >
+                  ×
+                </button>
+              )}
+            </div>
 
-          {/* Size selection */}
-          <div className="flex flex-wrap gap-3">
-            {["S", "M", "L", "XL", "XXL"].map((size) => (
-              <div
-                key={size}
-                onClick={() => handleSizeToggle(variantIndex, size)}
-                className="cursor-pointer"
-              >
-                <p
-                  className={`${
-                    variant.sizes.includes(size)
+            {/* Size selection */}
+            <div className="flex flex-wrap gap-2 mb-4">
+              {["S", "M", "L", "XL", "XXL"].map((size) => (
+                <button
+                  key={size}
+                  type="button"
+                  className={`px-3 py-1 rounded ${
+                    variant.sizes?.some(s => s.size === size)
                       ? "bg-pink-100"
                       : "bg-slate-200"
-                  } px-3 py-1`}
+                  }`}
+                  onClick={() => handleSizeToggle(variantIndex, size)}
                 >
                   {size}
-                </p>
+                </button>
+              ))}
+            </div>
+
+            {/* Image upload section */}
+            <div className="flex flex-wrap gap-2 mb-4">
+              {variant.images.map((image, imageIndex) => (
+                <label key={imageIndex} className="cursor-pointer">
+                  <img
+                    className="w-20 h-20 object-cover"
+                    src={!image ? assets.upload_area : URL.createObjectURL(image)}
+                    alt=""
+                  />
+                  <input
+                    type="file"
+                    hidden
+                    onChange={(e) =>
+                      handleImageChange(
+                        variantIndex,
+                        imageIndex,
+                        e.target.files[0]
+                      )
+                    }
+                  />
+                </label>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Size Info Popup */}
+      {showSizePopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg w-96">
+            <h3 className="text-lg font-semibold mb-4">Add Size Information for {selectedSize}</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Stock</label>
+                <input
+                  type="number"
+                  value={sizeInfo.stock}
+                  onChange={(e) => setSizeInfo({...sizeInfo, stock: e.target.value})}
+                  className="w-full border rounded px-2 py-1"
+                  placeholder="Enter stock quantity"
+                />
               </div>
-            ))}
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">Chest (inches)</label>
+                <input
+                  type="text"
+                  value={sizeInfo.chestMeasurements.inches}
+                  onChange={(e) => setSizeInfo({
+                    ...sizeInfo,
+                    chestMeasurements: {
+                      ...sizeInfo.chestMeasurements,
+                      inches: e.target.value
+                    }
+                  })}
+                  className="w-full border rounded px-2 py-1"
+                  placeholder="e.g., 34-37"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">Chest (cm)</label>
+                <input
+                  type="text"
+                  value={sizeInfo.chestMeasurements.cm}
+                  onChange={(e) => setSizeInfo({
+                    ...sizeInfo,
+                    chestMeasurements: {
+                      ...sizeInfo.chestMeasurements,
+                      cm: e.target.value
+                    }
+                  })}
+                  className="w-full border rounded px-2 py-1"
+                  placeholder="e.g., 86-94"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 mt-6">
+              <button
+                type="button"
+                onClick={handleCloseSizePopup}
+                className="px-4 py-2 border rounded hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleAddSizeInfo}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              >
+                Add Size Info
+              </button>
+            </div>
           </div>
         </div>
-      ))}
+      )}
 
       <button
         type="button"

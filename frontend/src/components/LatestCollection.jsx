@@ -40,7 +40,7 @@ const LatestCollection = () => {
           Array.from({ length: 10 }).map((_, index) => <Loader key={index} />)
         ) : (
           latestProducts.map((item, index) => (
-            <ProductItem key={index} id={item._id} name={item.name} price={item.price} colorVariants={item.colorVariants} bestseller={item.bestseller} />
+            <ProductItem key={index} id={item._id} name={item.name} colorVariants={item.colorVariants} bestseller={item.bestseller} />
           ))
         )}
       </div>

@@ -20,9 +20,32 @@ const ShopContextProvider = (props) => {
     const [userData, setUserData] = useState(null);
 
     const addToCart = async (itemId, size, color) => {
-
         if (!size || !color) {
             toast.error('Select Product Size and Color');
+            return;
+        }
+
+        // Find the product and check stock availability
+        const product = products.find(p => p._id === itemId);
+        if (!product) {
+            toast.error('Product not found');
+            return;
+        }
+
+        const colorVariant = product.colorVariants.find(cv => cv.color === color);
+        if (!colorVariant) {
+            toast.error('Color variant not found');
+            return;
+        }
+
+        const sizeVariant = colorVariant.sizes.find(s => s.size === size);
+        if (!sizeVariant) {
+            toast.error('Size not available');
+            return;
+        }
+
+        if (sizeVariant.stock <= 0) {
+            toast.error('Item out of stock');
             return;
         }
 
@@ -34,7 +57,14 @@ const ShopContextProvider = (props) => {
         if (!cartData[itemId][color]) {
             cartData[itemId][color] = {};
         }
-        cartData[itemId][color][size] = (cartData[itemId][color][size] || 0) + 1;
+
+        const currentQuantity = cartData[itemId][color][size] || 0;
+        if (currentQuantity >= sizeVariant.stock) {
+            toast.error('Cannot add more items - Stock limit reached');
+            return;
+        }
+
+        cartData[itemId][color][size] = currentQuantity + 1;
         toast.success('Item added to cart');
         setCartItems(cartData);
 
@@ -49,7 +79,7 @@ const ShopContextProvider = (props) => {
                 toast.error(error.message);
             }
         }
-    }
+    };
 
     // useEffect(() => {
     //     console.log(cartItems);
@@ -88,9 +118,12 @@ const ShopContextProvider = (props) => {
             const itemInfo = products.find(product => product._id === itemId);
             if (!itemInfo) return total;
 
-            return total + Object.values(colors).reduce((colorTotal, sizes) => {
+            return total + Object.entries(colors).reduce((colorTotal, [colorName, sizes]) => {
+                const colorVariant = itemInfo.colorVariants.find(cv => cv.color === colorName);
+                if (!colorVariant) return colorTotal;
+
                 return colorTotal + Object.values(sizes).reduce((sizeTotal, quantity) => {
-                    return sizeTotal + (quantity * itemInfo.price);
+                    return sizeTotal + (quantity * colorVariant.price);
                 }, 0);
             }, 0);
         }, 0);

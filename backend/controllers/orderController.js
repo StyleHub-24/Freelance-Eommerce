@@ -21,21 +21,31 @@ const updateProductStock = async (items, increase = false) => {
         
         if (!colorVariant) continue;
         
+        const size = colorVariant.sizes.find(s => s.size === item.size);
+        if (!size) continue;
+
         const newStock = increase ? 
-            colorVariant.stock + item.quantity :
-            colorVariant.stock - item.quantity;
+            size.stock + item.quantity :
+            size.stock - item.quantity;
             
         if (!increase && newStock < 0) {
-            throw new Error(`Insufficient stock for ${product.name} in ${item.color}`);
+            throw new Error(`Insufficient stock for ${product.name} in ${item.color}, size ${item.size}`);
         }
         
         await productModel.updateOne(
             { 
                 _id: item._id,
-                'colorVariants.color': item.color 
+                'colorVariants.color': item.color,
+                'colorVariants.sizes.size': item.size
             },
             { 
-                $set: { 'colorVariants.$.stock': newStock }
+                $set: { 'colorVariants.$[color].sizes.$[size].stock': newStock }
+            },
+            {
+                arrayFilters: [
+                    { 'color.color': item.color },
+                    { 'size.size': item.size }
+                ]
             }
         );
     }
@@ -46,8 +56,13 @@ const checkStockAvailability = async (items) => {
         const product = await productModel.findById(item._id);
         const colorVariant = product.colorVariants.find(v => v.color === item.color);
         
-        if (!colorVariant || colorVariant.stock < item.quantity) {
-            throw new Error(`Insufficient stock for ${product.name} in ${item.color}`);
+        if (!colorVariant) {
+            throw new Error(`Color ${item.color} not found for product ${product.name}`);
+        }
+
+        const size = colorVariant.sizes.find(s => s.size === item.size);
+        if (!size || size.stock < item.quantity) {
+            throw new Error(`Insufficient stock for ${product.name} in ${item.color}, size ${item.size}`);
         }
     }
 }

@@ -147,7 +147,6 @@ const Collection = () => {
                 key={index}
                 id={item._id}
                 name={item.name}
-                price={item.price}
                 colorVariants={item.colorVariants}
                 bestseller={item.bestseller}
               />

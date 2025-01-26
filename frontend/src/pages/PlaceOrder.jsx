@@ -98,7 +98,7 @@ const PlaceOrder = () => {
                   _id: product._id,
                   name: product.name,
                   description: product.description,
-                  price: product.price,
+                  price: colorVariant.price,
                   image: colorVariant.images,
                   category: product.category,
                   subCategory: product.subCategory,

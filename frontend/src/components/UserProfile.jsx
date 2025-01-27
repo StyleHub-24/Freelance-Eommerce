@@ -1,30 +1,39 @@
-import React, { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
-import { toast } from 'react-toastify';
-import { ShopContext } from '../context/ShopContext';
-import { Loader2, User, Pencil } from 'lucide-react';
-import { assets } from '../assets/assets';
+import React, { useState, useEffect, useContext } from "react";
+import axios from "axios";
+import { toast } from "react-toastify";
+import { ShopContext } from "../context/ShopContext";
+import { Loader2, User, Pencil } from "lucide-react";
+import { assets } from "../assets/assets";
+import PhoneInput from "./PhoneInput";
 
 const UserProfile = ({ token }) => {
   const [formData, setFormData] = useState({
     userData: null,
-    phoneNumber: '',
-    gender: '',
-    name: '',
-    email: '',
-    userId: '',
-    bio: '',
+    phoneNumber: "",
+    gender: "",
+    name: "",
+    email: "",
+    userId: "",
+    bio: "",
+    dateOfBirth: "",
     address: {
-      street: '',
-      city: '',
-      state: '',
-      zipCode: '',
-      country: ''
-    }
+      street: "",
+      city: "",
+      state: "",
+      zipCode: "",
+      country: "",
+    },
   });
   const [profilePicture, setProfilePicture] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const { backendUrl } = useContext(ShopContext);
+
+  // Add this inside the component, after existing state declarations
+  const formatDateForInput = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toISOString().split("T")[0];
+  };
 
   useEffect(() => {
     if (token) {
@@ -45,22 +54,25 @@ const UserProfile = ({ token }) => {
           userId: user._id,
           name: user.name,
           email: user.email,
-          phoneNumber: user.phoneNumber || '',
-          gender: user.gender || 'other',
-          bio: user.bio || '',
+          phoneNumber: user.phoneNumber || "",
+          gender: user.gender || "other",
+          bio: user.bio || "",
+          dateOfBirth: formatDateForInput(user.dateOfBirth),
           address: user.address || {
-            street: '',
-            city: '',
-            state: '',
-            zipCode: '',
-            country: ''
-          }
+            street: "",
+            city: "",
+            state: "",
+            zipCode: "",
+            country: "",
+          },
         });
         // console.log(user.profilePicture)
-        user.profilePicture==='defaultImage'?setProfilePicture(assets.defaultProfileImg):setProfilePicture(user.profilePicture);
+        user.profilePicture === "defaultImage"
+          ? setProfilePicture(assets.defaultProfileImg)
+          : setProfilePicture(user.profilePicture);
         // setProfilePicture(user.profilePicture || null);
       } else {
-        toast.error('Failed to fetch user profile');
+        toast.error("Failed to fetch user profile");
       }
     } catch (error) {
       toast.error(`Error fetching profile: ${error.message}`);
@@ -69,17 +81,17 @@ const UserProfile = ({ token }) => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    if (name.startsWith('address.')) {
-      const addressField = name.split('.')[1];
-      setFormData(prev => ({
+    if (name.startsWith("address.")) {
+      const addressField = name.split(".")[1];
+      setFormData((prev) => ({
         ...prev,
         address: {
           ...prev.address,
-          [addressField]: value
-        }
+          [addressField]: value,
+        },
       }));
     } else {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         [name]: value,
       }));
@@ -88,10 +100,10 @@ const UserProfile = ({ token }) => {
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
-    if (file && file.type.startsWith('image/')) {
+    if (file && file.type.startsWith("image/")) {
       setProfilePicture(file);
     } else {
-      toast.error('Please select a valid image file');
+      toast.error("Please select a valid image file");
     }
   };
 
@@ -101,37 +113,38 @@ const UserProfile = ({ token }) => {
 
     try {
       const formDataToSend = new FormData();
-      formDataToSend.append('userId', formData.userId);
-      formDataToSend.append('name', formData.name);
-      formDataToSend.append('email', formData.email);
-      formDataToSend.append('phoneNumber', formData.phoneNumber);
-      formDataToSend.append('gender', formData.gender);
-      formDataToSend.append('bio', formData.bio);
-      formDataToSend.append('address', JSON.stringify(formData.address));
-      
+      formDataToSend.append("userId", formData.userId);
+      formDataToSend.append("name", formData.name);
+      formDataToSend.append("email", formData.email);
+      formDataToSend.append("phoneNumber", formData.phoneNumber);
+      formDataToSend.append("gender", formData.gender);
+      formDataToSend.append("bio", formData.bio);
+      formDataToSend.append("dateOfBirth", formData.dateOfBirth);
+      formDataToSend.append("address", JSON.stringify(formData.address));
+
       if (profilePicture instanceof File) {
-        formDataToSend.append('profilePicture', profilePicture);
+        formDataToSend.append("profilePicture", profilePicture);
       }
 
       const response = await axios.put(
         `${backendUrl}/api/user/update-profile`,
         formDataToSend,
         {
-          headers: { 
+          headers: {
             token,
-            'Content-Type': 'multipart/form-data'
+            "Content-Type": "multipart/form-data",
           },
         }
       );
 
       if (response.data.success) {
-        toast.success('Profile updated successfully');
+        toast.success("Profile updated successfully");
         if (response.data.updatedUser?.profilePicture) {
           setProfilePicture(response.data.updatedUser.profilePicture);
         }
         fetchUserProfile();
       } else {
-        toast.error(response.data.message || 'Update failed');
+        toast.error(response.data.message || "Update failed");
       }
     } catch (error) {
       toast.error(`Error updating profile: ${error.message}`);
@@ -158,11 +171,11 @@ const UserProfile = ({ token }) => {
   return (
     <div className="max-w-2xl mx-auto p-6 bg-white shadow-lg rounded-lg">
       <h2 className="text-2xl font-semibold text-center mb-6">Edit Profile</h2>
-      
+
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="flex flex-col items-center mb-6">
-          <label 
-            htmlFor="profilePicture" 
+          <label
+            htmlFor="profilePicture"
             className="cursor-pointer group relative"
           >
             <div className="relative w-24 h-24 rounded-full overflow-hidden">
@@ -194,7 +207,10 @@ const UserProfile = ({ token }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Basic Information */}
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="name"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Name
             </label>
             <input
@@ -210,7 +226,10 @@ const UserProfile = ({ token }) => {
           </div>
 
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Email
             </label>
             <input
@@ -226,22 +245,23 @@ const UserProfile = ({ token }) => {
           </div>
 
           <div>
-            <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="phoneNumber"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Phone Number
             </label>
-            <input
-              id="phoneNumber"
-              name="phoneNumber"
-              type="tel"
+            <PhoneInput
               value={formData.phoneNumber}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-transparent"
-              placeholder="Enter your phone number"
             />
           </div>
 
           <div>
-            <label htmlFor="gender" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="gender"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Gender
             </label>
             <select
@@ -257,11 +277,43 @@ const UserProfile = ({ token }) => {
               <option value="other">Other</option>
             </select>
           </div>
+
+          <div>
+            <label
+              htmlFor="dateOfBirth"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Date of Birth
+            </label>
+            <input
+              id="dateOfBirth"
+              name="dateOfBirth"
+              type="date"
+              value={formData.dateOfBirth}
+              onChange={handleInputChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-transparent"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Age
+            </label>
+            <input
+              type="text"
+              value={formData.userData?.age || "Not set"}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100"
+              disabled
+            />
+          </div>
         </div>
 
         {/* Bio Section */}
         <div>
-          <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="bio"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
             Bio
           </label>
           <textarea
@@ -280,7 +332,10 @@ const UserProfile = ({ token }) => {
           <h3 className="text-lg font-medium text-gray-900">Address</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="street" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="street"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Street Address
               </label>
               <input
@@ -295,7 +350,10 @@ const UserProfile = ({ token }) => {
             </div>
 
             <div>
-              <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="city"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 City
               </label>
               <input
@@ -310,7 +368,10 @@ const UserProfile = ({ token }) => {
             </div>
 
             <div>
-              <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="state"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 State
               </label>
               <input
@@ -325,7 +386,10 @@ const UserProfile = ({ token }) => {
             </div>
 
             <div>
-              <label htmlFor="zipCode" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="zipCode"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 ZIP Code
               </label>
               <input
@@ -340,7 +404,10 @@ const UserProfile = ({ token }) => {
             </div>
 
             <div>
-              <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="country"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Country
               </label>
               <input
@@ -367,7 +434,7 @@ const UserProfile = ({ token }) => {
               Saving...
             </>
           ) : (
-            'Save Changes'
+            "Save Changes"
           )}
         </button>
       </form>

@@ -2,27 +2,33 @@ import userModel from "../models/userModel.js";
 
 const migrateUserFields = async () => {
   try {
-    const result = await userModel.updateMany(
-      {
-        $or: [
-          { phoneNumber: { $exists: false } },
-          { profilePicture: { $exists: false }},
-          { gender: { $exists: false } },
-          { address: { $exists: false } },
-          { bio: { $exists: false } },
-        ]
-      },
-      {
-        $set: {
-          phoneNumber: "",  
-          profilePicture: "defaultImage",  
-          gender: "other",  
-          address: {},  
-          bio: "",  
+    // Fetch all users with missing fields or fields that need recalculation
+    const users = await userModel.find({
+      $or: [
+        { dateOfBirth: { $exists: false } },
+        { age: { $exists: false } }, // Check if age is missing
+      ],
+    });
+
+    const updates = users.map(async (user) => {
+      // Calculate age if dateOfBirth exists
+      const updatedAge = user.dateOfBirth ? user.calculateAge() : null;
+
+      return userModel.updateOne(
+        { _id: user._id },
+        {
+          $set: {
+            dateOfBirth: user.dateOfBirth || null,
+            age: updatedAge, // Set calculated age or null
+          },
         }
-      }
-    );
-    console.log(`✅ Migration completed. Updated ${result.modifiedCount} users.`);
+      );
+    });
+
+    // Await all update operations
+    const result = await Promise.all(updates);
+
+    console.log(`✅ Migration completed. Updated ${result.length} users.`);
   } catch (error) {
     console.error("❌ Migration failed:", error);
   }

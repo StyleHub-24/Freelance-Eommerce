@@ -256,13 +256,37 @@ const getUserProfile = async (req, res) => {
 // Function to update user profile
 const updateUserProfile = async (req, res) => {
     try {
-        const { phoneNumber, gender, userId, name, email, bio, address } = req.body;
+        const { phoneNumber, gender, userId, name, email, bio, address, dateOfBirth } = req.body;
         const addressObject = JSON.parse(address); // Parse the stringified address object
 
         // First get current user 
         const currentUser = await userModel.findById(userId);
         if (!currentUser) {
             return res.json({ success: false, message: "User not found!" });
+        }
+
+        let calculatedAge = null;
+
+        // Validate date of birth if provided
+        if (dateOfBirth) {
+            const dob = new Date(dateOfBirth);
+            if (isNaN(dob.getTime())) {
+                return res.json({ success: false, message: "Please enter a valid date of birth!" });
+            }
+
+            let age = new Date().getFullYear() - dob.getFullYear();
+            let monthDiff = new Date().getMonth() - dob.getMonth();
+            
+            if (monthDiff < 0 || (monthDiff === 0 && new Date().getDate() < dob.getDate())) {
+                age--;
+            }
+
+            calculatedAge = age;
+
+            // Basic age validation
+            if (age < 13) {
+                return res.json({ success: false, message: "You must be at least 13 years old!" });
+            }
         }
 
         let profilePictureUrl = currentUser.profilePicture; // Keep existing profile picture by default
@@ -286,19 +310,25 @@ const updateUserProfile = async (req, res) => {
             profilePictureUrl = result.secure_url;
         }
 
+        const updateData = {
+            name,
+            email,
+            phoneNumber: phoneNumber || "",
+            gender: gender || "other",
+            profilePicture: profilePictureUrl,
+            bio: bio || "",
+            address: addressObject
+        };
+
+        // Only update dateOfBirth and age if dateOfBirth is provided
+        if (dateOfBirth) {
+            updateData.dateOfBirth = new Date(dateOfBirth);
+            updateData.age = calculatedAge;
+        }
+
         const updatedUser = await userModel.findByIdAndUpdate(
             userId,
-            {
-                $set: {
-                    name,
-                    email,
-                    phoneNumber: phoneNumber || "",
-                    gender: gender || "other",
-                    profilePicture: profilePictureUrl, // Use either new uploaded image URL or keep existing one
-                    bio: bio || "",
-                    address: addressObject
-                }
-            },
+            { $set: updateData },
             { new: true }
         );
 

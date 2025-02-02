@@ -5,21 +5,18 @@ const migrateUserFields = async () => {
     // Fetch all users with missing fields or fields that need recalculation
     const users = await userModel.find({
       $or: [
-        { dateOfBirth: { $exists: false } },
-        { age: { $exists: false } }, // Check if age is missing
+        { otp: { $exists: false } },       // Check if otp is missing
+        { otpExpiry: { $exists: false } }, // Check if otpExpiry is missing
       ],
     });
 
     const updates = users.map(async (user) => {
-      // Calculate age if dateOfBirth exists
-      const updatedAge = user.dateOfBirth ? user.calculateAge() : null;
-
       return userModel.updateOne(
         { _id: user._id },
         {
           $set: {
-            dateOfBirth: user.dateOfBirth || null,
-            age: updatedAge, // Set calculated age or null
+            otp: user.otp || null,          // Set otp to existing value or null
+            otpExpiry: user.otpExpiry || null, // Set otpExpiry to existing value or null
           },
         }
       );

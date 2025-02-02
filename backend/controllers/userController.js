@@ -182,11 +182,11 @@ const forgotPassword = async (req, res) => {
 
         const mailOptions = {
             from: {
-                name: 'StyleHub',  
+                name: 'StyleHub',
                 address: process.env.EMAIL_USER
             },
             to: email,
-            subject: 'Reset Your Password',  
+            subject: 'Reset Your Password',
             html: htmlTemplate,
             text: `Hello ${user.name},\n\nWe received a request to reset your password. To reset your password, click the following link: ${resetLink}\n\nIf you didn't make this request, you can safely ignore this email.\n\nThis link will expire in 1 hour for security reasons.`,
             headers: {
@@ -276,7 +276,7 @@ const updateUserProfile = async (req, res) => {
 
             let age = new Date().getFullYear() - dob.getFullYear();
             let monthDiff = new Date().getMonth() - dob.getMonth();
-            
+
             if (monthDiff < 0 || (monthDiff === 0 && new Date().getDate() < dob.getDate())) {
                 age--;
             }
@@ -340,4 +340,184 @@ const updateUserProfile = async (req, res) => {
 };
 
 
-export { loginUser, registerUser, adminLogin, forgotPassword, resetPassword, getUserProfile, updateUserProfile }
+// Generate and send OTP for password change
+const sendPasswordChangeOtp = async (req, res) => {
+    const { userId, currentPassword } = req.body;
+
+    try {
+        const user = await userModel.findById(userId);
+        if (!user) {
+            return res.json({ success: false, message: "User not found!" });
+        }
+
+        // Verify current password
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+            return res.json({ success: false, message: "Current password is incorrect!" });
+        }
+
+        // Generate 4-digit OTP
+        const otp = Math.floor(1000 + Math.random() * 9000).toString();
+        const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
+
+        // Save OTP to user
+        user.otp = otp;
+        user.otpExpiry = otpExpiry;
+        await user.save();
+
+        // Send OTP via email
+        const transporter = nodemailer.createTransport({
+            service: 'Gmail',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS,
+            },
+        });
+
+        const htmlTemplate = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Change OTP</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 30px auto;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .header {
+            background-color: #2d89ff;
+            padding: 20px;
+            border-radius: 8px 8px 0 0;
+            color: #ffffff;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .content {
+            padding: 20px;
+            color: #333;
+            font-size: 16px;
+        }
+        .otp {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2d89ff;
+            padding: 10px;
+            border: 2px dashed #2d89ff;
+            display: inline-block;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .footer {
+            padding: 15px;
+            font-size: 14px;
+            color: #666;
+            border-top: 1px solid #ddd;
+            margin-top: 20px;
+        }
+        .footer a {
+            color: #2d89ff;
+            text-decoration: none;
+        }
+        .btn {
+            display: inline-block;
+            background-color: #2d89ff;
+            color: #ffffff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+        .btn:hover {
+            background-color: #1a5fc2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            StyleHub Password Change OTP
+        </div>
+        <div class="content">
+            <p>Hello ${user.name},</p>
+            <p>You requested to change your password. Use the OTP below to proceed:</p>
+            <div class="otp">${otp}</div>
+            <p>This OTP will expire in <strong>10 minutes</strong>. Do not share this code with anyone.</p>
+            <p>If you did not request this change, please <a href="#">secure your account</a> immediately.</p>
+        </div>
+        <div class="footer">
+            <p>This is an automated email from [StyleHub]. Please do not reply to this email.</p>
+            &copy; ${new Date().getFullYear()} StyleHub. All rights reserved. | <a href="#">Privacy Policy</a>
+        </div>
+    </div>
+</body>
+</html>
+`;
+
+        await transporter.sendMail({
+            from: `"StyleHub" <${process.env.EMAIL_USER}>`,
+            to: user.email,
+            subject: 'Password Change OTP Verification',
+            html: htmlTemplate,
+            text: `Your OTP for password change is: ${otp}\nThis OTP will expire in 10 minutes.`,
+            headers: {
+                'X-Priority': '1',  // High priority
+                'X-MSMail-Priority': 'High',
+                'Importance': 'High'
+            }
+        });
+
+        res.json({ success: true, message: 'OTP sent to registered email!' });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+// Verify OTP and change password
+const verifyOtpAndChangePassword = async (req, res) => {
+    const { userId, otp, newPassword } = req.body;
+
+    try {
+        const user = await userModel.findById(userId);
+        if (!user) {
+            return res.json({ success: false, message: "User not found!" });
+        }
+
+        // Check OTP validity
+        if (user.otp !== otp || new Date() > user.otpExpiry) {
+            return res.json({ success: false, message: "Invalid or expired OTP!" });
+        }
+
+        // Validate new password
+        if (newPassword.length < 8) {
+            return res.json({ success: false, message: "New password must be at least 8 characters!" });
+        }
+
+        // Hash and update password
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(newPassword, salt);
+        user.otp = null;
+        user.otpExpiry = null;
+        await user.save();
+
+        res.json({ success: true, message: "Password changed successfully!" });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+export { loginUser, registerUser, adminLogin, forgotPassword, resetPassword, getUserProfile, updateUserProfile, sendPasswordChangeOtp, verifyOtpAndChangePassword };

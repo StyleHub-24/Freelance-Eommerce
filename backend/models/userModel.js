@@ -12,6 +12,8 @@ const userSchema = new mongoose.Schema({
     profilePicture: { type: String, default: "defaultImage" },
     gender: { type: String, enum: ["male", "female", "other"], default: "other" },
     bio: { type: String, default: "" },
+    otp: { type: String, default: null },
+    otpExpiry: { type: Date, default: null },
 }, {
     minimize: false,
     timestamps: true

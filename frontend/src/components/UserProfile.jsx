@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { ShopContext } from "../context/ShopContext";
-import { Loader2, User, Pencil } from "lucide-react";
+import { Loader2, User, Pencil, EyeOff, Eye } from "lucide-react";
 import { assets } from "../assets/assets";
 import PhoneInput from "./PhoneInput";
 
@@ -27,8 +27,67 @@ const UserProfile = ({ token }) => {
   const [profilePicture, setProfilePicture] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const { backendUrl } = useContext(ShopContext);
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+    otp: "",
+  });
+  const [isPasswordLoading, setIsPasswordLoading] = useState(false);
+  const [isOtpSending, setIsOtpSending] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
 
-  // Add this inside the component, after existing state declarations
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const handlePasswordChange = (e) => {
+    setPasswordForm({
+      ...passwordForm,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handlePasswordSubmit = async (e) => {
+    e.preventDefault();
+    setIsPasswordLoading(true);
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      toast.error("New passwords do not match!");
+      setIsPasswordLoading(false);
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        `${backendUrl}/api/user/change-password/verify`,
+        {
+          userId: formData.userId,
+          otp: passwordForm.otp,
+          newPassword: passwordForm.newPassword,
+        },
+        { headers: { token } }
+      );
+
+      if (response.data.success) {
+        toast.success("Password changed successfully!");
+        setPasswordForm({
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+          otp: "",
+        });
+        setOtpSent(false);
+      } else {
+        toast.error(response.data.message || "Error changing password");
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Error changing password");
+    } finally {
+      setIsPasswordLoading(false);
+    }
+  };
+
   const formatDateForInput = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
@@ -438,6 +497,199 @@ const UserProfile = ({ token }) => {
           )}
         </button>
       </form>
+      <div className="mt-12 border-t pt-8">
+        <h3 className="text-xl font-semibold mb-4">Change Password</h3>
+
+        <form onSubmit={handlePasswordSubmit} className="space-y-4 max-w-md">
+          {!otpSent ? (
+            <>
+              <div>
+                <label
+                  htmlFor="currentPassword"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Current Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showCurrentPassword ? "text" : "password"}
+                    id="currentPassword"
+                    name="currentPassword"
+                    value={passwordForm.currentPassword}
+                    onChange={handlePasswordChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-transparent"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                  >
+                    {showCurrentPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={async () => {
+                  setIsOtpSending(true);
+                  try {
+                    const response = await axios.post(
+                      `${backendUrl}/api/user/change-password/otp`,
+                      {
+                        userId: formData.userId,
+                        currentPassword: passwordForm.currentPassword,
+                      },
+                      { headers: { token } }
+                    );
+                    if (response.data.success) {
+                      setOtpSent(true);
+                      toast.success("OTP sent to your email!");
+                    } else {
+                      toast.error(response.data.message || "Error sending OTP");
+                    }
+                  } catch (error) {
+                    toast.error(
+                      error.response?.data?.message || "Error sending OTP"
+                    );
+                  } finally {
+                    setIsOtpSending(false);
+                  }
+                }}
+                className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                disabled={isOtpSending}
+              >
+                {isOtpSending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  "Send OTP"
+                )}
+              </button>
+            </>
+          ) : (
+            <>
+              <div>
+                <label
+                  htmlFor="otp"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Verification OTP
+                </label>
+                <input
+                  type="text"
+                  id="otp"
+                  name="otp"
+                  value={passwordForm.otp}
+                  onChange={handlePasswordChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-transparent"
+                  placeholder="Enter 4-digit OTP"
+                  required
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="newPassword"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  New Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showNewPassword ? "text" : "password"}
+                    id="newPassword"
+                    name="newPassword"
+                    value={passwordForm.newPassword}
+                    onChange={handlePasswordChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-transparent"
+                    required
+                  />
+                  {passwordForm.newPassword && (
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                    >
+                      {showNewPassword ? (
+                        <EyeOff className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
+                      )}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="confirmPassword"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Confirm New Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    value={passwordForm.confirmPassword}
+                    onChange={handlePasswordChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-transparent"
+                    required
+                  />
+                  {passwordForm.confirmPassword && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
+                      )}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <button
+                  type="submit"
+                  disabled={isPasswordLoading}
+                  className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                >
+                  {isPasswordLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Updating...
+                    </>
+                  ) : (
+                    "Change Password"
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOtpSent(false)}
+                  className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300"
+                >
+                  Cancel
+                </button>
+              </div>
+            </>
+          )}
+        </form>
+      </div>
     </div>
   );
 };

@@ -31,7 +31,7 @@ const Loader = () => {
 };
 
 const Orders = () => {
-  const { backendUrl, token, currency } = useContext(ShopContext);
+  const { backendUrl, token, currency, navigate } = useContext(ShopContext);
 
   const [orderData, setOrderData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -131,7 +131,7 @@ const Orders = () => {
               className="py-4 border-t border-b text-gray-700 flex flex-col md:flex-row md:items-center md:justify-between gap-4"
             >
               <div className="flex items-start gap-6 text-sm">
-                <img className="w-16 sm:w-20" src={item.image[0]} alt="" />
+                <img className="w-16 sm:w-20 cursor-pointer" src={item.image[0]} alt="" onClick={() => navigate(`/product/${item._id}?color=${item.color}`)} />
                 <div>
                   <p className="sm:text-base font-medium">{item.name}</p>
                   <div className="flex flex-wrap items-center gap-3 mt-1 text-base text-gray-700">

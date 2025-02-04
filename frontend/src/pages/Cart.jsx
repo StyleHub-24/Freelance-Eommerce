@@ -84,9 +84,10 @@ const Cart = () => {
               >
                 <div className="flex items-start gap-6">
                   <img
-                    className="w-16 sm:w-20"
+                    className="w-16 sm:w-20 cursor-pointer"
                     src={colorVariant.images[0]}
                     alt=""
+                    onClick={() => navigate(`/product/${productData._id}?color=${item.color}`)}
                   />
                   <div>
                     <p className="text-xs sm:text-lg font-medium">

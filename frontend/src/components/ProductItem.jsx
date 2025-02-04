@@ -15,7 +15,7 @@ const ProductItem = ({ id, name, colorVariants, bestseller }) => {
   const isOutOfStock = currentColorStock === 0;
 
   return (
-    <Link className='text-gray-700 cursor-pointer relative group' to={`/product/${id}`}>
+    <Link className='text-gray-700 cursor-pointer relative group' to={`/product/${id}?color=${colorVariants[selectedColorIndex].color}`}>
       {bestseller && (
         <span className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 text-xs rounded z-10">
           Bestseller

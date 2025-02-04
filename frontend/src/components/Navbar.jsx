@@ -48,7 +48,10 @@ const Navbar = () => {
       </ul>
       <div className="flex items-center gap-6">
         <img
-          onClick={() =>{!showSearch?setShowSearch(true):setShowSearch(false)}}
+          onClick={() => {
+            navigate("/collection");
+            !showSearch ? setShowSearch(true) : setShowSearch(false);
+          }}
           src={assets.search_icon}
           alt="search"
           className="w-5 cursor-pointer"
@@ -64,9 +67,12 @@ const Navbar = () => {
           {token && (
             <div className="group-hover:block hidden absolute dropdown-menu right-0 pt-4 z-40">
               <div className="flex flex-col gap-2 w-36 py-3 px-5 bg-slate-100 text-gray-500 rounded">
-                <p 
-                onClick={() => navigate("/user-profile")}
-                className="cursor-pointer hover:text-black">My Profile</p>
+                <p
+                  onClick={() => navigate("/user-profile")}
+                  className="cursor-pointer hover:text-black"
+                >
+                  My Profile
+                </p>
                 <p
                   onClick={() => navigate("/orders")}
                   className="cursor-pointer hover:text-black"
